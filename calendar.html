@@ -287,7 +287,7 @@
 const CALENDARS = [
   {
     name: "Dan 🐒",
-    url:  "https://calendar.google.com/calendar/ical/dgroberts%40gmail.com/public/basic.ics",
+    url:  "https://calendar.google.com/calendar/ical/dgroberts%40gmail.com/private-358ccdd864b4a9371908865fe1211610/basic.ics",
     color: "var(--cal1)"
   },
   {
@@ -309,10 +309,10 @@ const CALENDARS = [
 
 const DAYS_TO_SHOW  = 7;    // columns shown
 const REFRESH_MINS  = 30;   // auto-refresh interval
+// Your Cloudflare Worker proxy URL - see worker.js for setup instructions
+const WORKER_URL = 'https://ical-proxy.REPLACE_WITH_YOUR_SUBDOMAIN.workers.dev';
 const CORS_PROXIES = [
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `${WORKER_URL}/?url=${encodeURIComponent(url)}`,
 ];
 
 // ─────────────────────────────────────────────
