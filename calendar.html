@@ -20,9 +20,10 @@
       --border:   #21262d;
       --text:     #e6edf3;
       --muted:    #7d8590;
-      --cal1:     #58a6ff;
-      --cal2:     #3fb950;
-      --cal4:     #d2a8ff;
+      --cal1:     #4caf7d;
+      --cal2:     #58a6ff;
+      --cal3:     #f0ead6;
+      --cal4:     #888888;
       --today-bg: #1a2332;
     }
 
@@ -171,9 +172,10 @@
     .event-time {
       font-family: 'DM Mono', monospace;
       font-size: 0.65rem;
-      opacity: 0.7;
+      opacity: 0.8;
       display: block;
       margin-bottom: 2px;
+      color: inherit;
     }
 
     .event-title {
@@ -449,10 +451,23 @@ function parseICal(text, cal) {
 }
 
 function makeEvent(event, startDate, allDay, endDate, cal) {
+  // Calculate end from duration if endDate is missing or wrong
+  let end = endDate;
+  if (!allDay && startDate) {
+    try {
+      const dur = event.duration;
+      if (dur) {
+        const durSecs = dur.toSeconds();
+        if (durSecs > 0) {
+          end = new Date(startDate.getTime() + durSecs * 1000);
+        }
+      }
+    } catch(e) {}
+  }
   return {
     title:  event.summary,
     start:  startDate,
-    end:    endDate,
+    end:    end,
     allDay: allDay,
     color:  cal.color,
     cal:    cal.name
@@ -515,28 +530,33 @@ function renderEvents(allEvents, cols) {
     dayEvents.forEach(ev => {
       const div = document.createElement('div');
       div.className = 'event';
-      div.style.background = ev.color + '22';
-      div.style.borderLeft = '3px solid ' + ev.color;
+      // Use solid colour block; light colours (ivory/white) get dark text
+      // cal3 (Zahra ivory) and cal4 (grey) need dark text
+      const isLight = ev.color === 'var(--cal3)';
+      div.style.background = ev.color;
+      div.style.borderLeft = 'none';
+      div.style.color = isLight ? '#1a1a2e' : '#ffffff';
 
       let timeStr = '';
       if (!ev.allDay) {
         const h = ev.start.getHours();
         const m = ev.start.getMinutes();
         if (h !== 0 || m !== 0) {
-          let t = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+          const startStr = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+          let t = startStr;
           if (ev.end) {
-            const eh = ev.end.getHours();
-            const em = ev.end.getMinutes();
-            if (eh !== 0 || em !== 0) {
-              // Show duration if same-day, otherwise just end time
-              const diffMs  = ev.end - ev.start;
-              const diffMins = Math.round(diffMs / 60000);
+            const diffMs   = ev.end - ev.start;
+            const diffMins = Math.round(diffMs / 60000);
+            if (diffMins > 0) {
+              const eh = ev.end.getHours();
+              const em = ev.end.getMinutes();
+              const endStr = String(eh).padStart(2,'0') + ':' + String(em).padStart(2,'0');
               const durStr = diffMins >= 60
                 ? (diffMins % 60 === 0
                     ? (diffMins/60) + 'h'
                     : Math.floor(diffMins/60) + 'h' + (diffMins%60) + 'm')
                 : diffMins + 'm';
-              t += ' <span style="opacity:0.5">· ' + durStr + '</span>';
+              t = startStr + ' – ' + endStr + ' <span style="opacity:0.6">(' + durStr + ')</span>';
             }
           }
           timeStr = `<span class="event-time">${t}</span>`;
