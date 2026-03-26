@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Family Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/ical.js@1.5.0/build/ical.min.js"></script>
+  <style>
+    :root {
+      --bg:       #0d1117;
+      --surface:  #161b22;
+      --border:   #21262d;
+      --text:     #e6edf3;
+      --muted:    #7d8590;
+      --cal1:     #58a6ff;
+      --cal2:     #3fb950;
+      --cal4:     #d2a8ff;
+      --today-bg: #1a2332;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+    }
+
+    #app {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      height: 100vh;
+      padding: 28px 32px 24px;
+      gap: 24px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+
+    #clock {
+      font-family: 'DM Mono', monospace;
+      font-size: 3.8rem;
+      font-weight: 400;
+      letter-spacing: -2px;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    #date-label {
+      font-size: 1.05rem;
+      color: var(--muted);
+      font-weight: 400;
+      margin-top: 6px;
+      letter-spacing: 0.02em;
+    }
+
+    .legend {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      padding-bottom: 4px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ── Days grid ── */
+    #days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      align-content: start;
+      overflow: hidden;
+    }
+
+    .day-col {
+      background: var(--surface);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .day-col.is-today {
+      background: var(--today-bg);
+      border-color: #2d4a6e;
+    }
+
+    .day-head {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .day-name {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .day-col.is-today .day-name {
+      color: var(--cal1);
+    }
+
+    .day-num {
+      font-size: 1.6rem;
+      font-weight: 300;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .day-col.is-today .day-num {
+      color: var(--cal1);
+    }
+
+    .events {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      overflow: hidden;
+    }
+
+    .event {
+      border-radius: 5px;
+      padding: 5px 8px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      line-height: 1.3;
+      word-break: break-word;
+      overflow: hidden;
+    }
+
+    .event-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      opacity: 0.7;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .event-title {
+      display: block;
+    }
+
+    .no-events {
+      font-size: 0.72rem;
+      color: var(--border);
+      font-style: italic;
+    }
+
+    /* ── Status bar ── */
+    #status {
+      position: fixed;
+      bottom: 10px;
+      right: 16px;
+      font-size: 0.65rem;
+      color: var(--border);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .error-msg {
+      background: #2d1b1b;
+      border: 1px solid #5a2020;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.7rem;
+      color: #f78166;
+    }
+
+    /* ── Weather bar ── */
+    #weather {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 0.88rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .wx-temp {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .wx-icon {
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+
+    .wx-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .wx-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .wx-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+
+    .wx-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--border);
+    }
+
+    @media (max-width: 900px) {
+      #days { grid-template-columns: repeat(4, 1fr); }
+      #clock { font-size: 2.8rem; }
+    }
+
+    @media (max-width: 600px) {
+      #days { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div>
+      <div id="clock">--:--</div>
+      <div id="date-label">Loading...</div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </header>
+  <div id="weather">Loading weather…</div>
+  <div id="days"></div>
+</div>
+<div id="status">Initialising...</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIGURATION — paste your iCal URLs here
+// ─────────────────────────────────────────────
+const CALENDARS = [
+  {
+    name: "Dan 🐒",
+    url:  "https://calendar.google.com/calendar/ical/dgroberts%40gmail.com/public/basic.ics",
+    color: "var(--cal1)"
+  },
+  {
+    name: "Marcia 👹",
+    url:  "https://p12-caldav.icloud.com/published/2/REPLACE_WITH_YOUR_ICAL_URL",
+    color: "var(--cal2)"
+  },
+  {
+    name: "Zahra 🐯",
+    url:  "https://calendar.google.com/calendar/ical/REPLACE_WITH_YOUR_ICAL_URL/basic.ics",
+    color: "var(--cal3)"
+  },
+  {
+    name: "NZ Holidays 🇳🇿",
+    url:  "https://calendar.google.com/calendar/ical/en.new_zealand%23holiday%40group.v.calendar.google.com/public/basic.ics",
+    color: "var(--cal4)"
+  }
+];
+
+const DAYS_TO_SHOW  = 7;    // columns shown
+const REFRESH_MINS  = 30;   // auto-refresh interval
+const CORS_PROXY    = "https://api.allorigins.win/raw?url=";
+
+// ─────────────────────────────────────────────
+//  Clock
+// ─────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('clock').textContent = h + ':' + m;
+
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+  document.getElementById('date-label').textContent =
+    days[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+}
+
+setInterval(updateClock, 10000);
+updateClock();
+
+// ─────────────────────────────────────────────
+//  Build legend
+// ─────────────────────────────────────────────
+function buildLegend() {
+  const el = document.getElementById('legend');
+  el.innerHTML = CALENDARS.map(c =>
+    `<div class="legend-item">
+      <div class="legend-dot" style="background:${c.color}"></div>
+      ${c.name}
+    </div>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────────
+//  Fetch + parse one iCal feed
+// ─────────────────────────────────────────────
+async function fetchCalendar(cal) {
+  // Convert webcal:// → https://
+  let url = cal.url.replace(/^webcal:\/\//i, 'https://');
+  const proxyUrl = CORS_PROXY + encodeURIComponent(url);
+  const resp = await fetch(proxyUrl, { cache: 'no-store' });
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  const text = await resp.text();
+  return parseICal(text, cal);
+}
+
+function parseICal(text, cal) {
+  const jcal = ICAL.parse(text);
+  const comp  = new ICAL.Component(jcal);
+  const events = [];
+
+  const now   = new Date();
+  const start = new Date(now); start.setHours(0, 0, 0, 0);
+  const end   = new Date(start);
+  end.setDate(end.getDate() + DAYS_TO_SHOW);
+
+  const vevents = comp.getAllSubcomponents('vevent');
+
+  vevents.forEach(vevent => {
+    try {
+      const event = new ICAL.Event(vevent);
+      if (!event.summary) return;
+
+      if (event.isRecurring()) {
+        const rangeStart = ICAL.Time.fromJSDate(start, false);
+        const rangeEnd   = ICAL.Time.fromJSDate(end, false);
+        const iter = event.iterator(rangeStart);
+        let next;
+        let count = 0;
+        while ((next = iter.next()) && count < 50) {
+          count++;
+          if (next.toJSDate() >= end) break;
+          const dur = event.duration;
+          const evEnd = next.clone();
+          evEnd.addDuration(dur);
+          if (evEnd.toJSDate() >= start) {
+            events.push(makeEvent(event, next.toJSDate(), event.startDate.isDate, cal));
+          }
+        }
+      } else {
+        const evStart = event.startDate.toJSDate();
+        const evEnd   = event.endDate ? event.endDate.toJSDate() : evStart;
+        if (evEnd >= start && evStart < end) {
+          events.push(makeEvent(event, evStart, event.startDate.isDate, cal));
+        }
+      }
+    } catch(e) {
+      // skip malformed events
+    }
+  });
+
+  return events;
+}
+
+function makeEvent(event, startDate, allDay, cal) {
+  return {
+    title:  event.summary,
+    start:  startDate,
+    allDay: allDay,
+    color:  cal.color,
+    cal:    cal.name
+  };
+}
+
+// ─────────────────────────────────────────────
+//  Render
+// ─────────────────────────────────────────────
+function buildDayColumns() {
+  const container = document.getElementById('days');
+  container.innerHTML = '';
+  const cols = [];
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  for (let i = 0; i < DAYS_TO_SHOW; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    const isToday = i === 0;
+
+    const names = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const col = document.createElement('div');
+    col.className = 'day-col' + (isToday ? ' is-today' : '');
+    col.dataset.date = d.toDateString();
+
+    col.innerHTML =
+      `<div class="day-head">
+        <div class="day-name">${isToday ? 'Today' : names[d.getDay()]}</div>
+        <div class="day-num">${d.getDate()}</div>
+       </div>
+       <div class="events"></div>`;
+
+    container.appendChild(col);
+    cols.push({ el: col, date: d });
+  }
+  return cols;
+}
+
+function renderEvents(allEvents, cols) {
+  cols.forEach(({ el, date }) => {
+    const eventsEl = el.querySelector('.events');
+    eventsEl.innerHTML = '';
+
+    const dayStart = new Date(date); dayStart.setHours(0,0,0,0);
+    const dayEnd   = new Date(date); dayEnd.setHours(23,59,59,999);
+
+    const dayEvents = allEvents
+      .filter(e => e.start >= dayStart && e.start <= dayEnd)
+      .sort((a, b) => {
+        if (a.allDay && !b.allDay) return -1;
+        if (!a.allDay && b.allDay) return 1;
+        return a.start - b.start;
+      });
+
+    if (dayEvents.length === 0) {
+      eventsEl.innerHTML = '<div class="no-events">—</div>';
+      return;
+    }
+
+    dayEvents.forEach(ev => {
+      const div = document.createElement('div');
+      div.className = 'event';
+      div.style.background = ev.color + '22';
+      div.style.borderLeft = '3px solid ' + ev.color;
+
+      let timeStr = '';
+      if (!ev.allDay) {
+        const h = String(ev.start.getHours()).padStart(2,'0');
+        const m = String(ev.start.getMinutes()).padStart(2,'0');
+        timeStr = `<span class="event-time">${h}:${m}</span>`;
+      }
+
+      div.innerHTML = timeStr + `<span class="event-title">${escHtml(ev.title)}</span>`;
+      eventsEl.appendChild(div);
+    });
+  });
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─────────────────────────────────────────────
+//  Main load
+// ─────────────────────────────────────────────
+async function load() {
+  const status = document.getElementById('status');
+  status.textContent = 'Fetching calendars…';
+
+  const cols = buildDayColumns();
+
+  const [wxResult] = await Promise.allSettled([fetchWeather()]);
+  if (wxResult.status === 'rejected') {
+    document.getElementById('weather').textContent = 'Weather unavailable';
+  }
+
+  const results = await Promise.allSettled(CALENDARS.map(fetchCalendar));
+
+  const allEvents = [];
+  const errors = [];
+
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') {
+      allEvents.push(...r.value);
+    } else {
+      errors.push(CALENDARS[i].name + ': ' + r.reason.message);
+    }
+  });
+
+  renderEvents(allEvents, cols);
+
+  const now = new Date();
+  const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+  if (errors.length) {
+    status.textContent = '⚠ ' + errors.join(' | ') + ' — updated ' + timeStr;
+  } else {
+    status.textContent = 'Updated ' + timeStr;
+  }
+}
+
+// ─────────────────────────────────────────────
+//  Weather — Open-Meteo (Glen Eden, Auckland)
+// ─────────────────────────────────────────────
+const WX_LAT  = -36.9029;
+const WX_LNG  = 174.6476;
+const WX_TZ   = 'Pacific/Auckland';
+
+const WMO_ICONS = {
+  0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
+  45:'🌫️', 48:'🌫️',
+  51:'🌦️', 53:'🌦️', 55:'🌧️',
+  61:'🌧️', 63:'🌧️', 65:'🌧️',
+  71:'🌨️', 73:'🌨️', 75:'🌨️',
+  77:'🌨️',
+  80:'🌦️', 81:'🌧️', 82:'⛈️',
+  85:'🌨️', 86:'🌨️',
+  95:'⛈️', 96:'⛈️', 99:'⛈️'
+};
+
+const WMO_DESC = {
+  0:'Clear sky', 1:'Mainly clear', 2:'Partly cloudy', 3:'Overcast',
+  45:'Fog', 48:'Icy fog',
+  51:'Light drizzle', 53:'Drizzle', 55:'Heavy drizzle',
+  61:'Light rain', 63:'Rain', 65:'Heavy rain',
+  71:'Light snow', 73:'Snow', 75:'Heavy snow', 77:'Snow grains',
+  80:'Showers', 81:'Heavy showers', 82:'Violent showers',
+  85:'Snow showers', 86:'Heavy snow showers',
+  95:'Thunderstorm', 96:'Thunderstorm w/ hail', 99:'Thunderstorm w/ heavy hail'
+};
+
+async function fetchWeather() {
+  const url = 'https://api.open-meteo.com/v1/forecast' +
+    '?latitude=' + WX_LAT +
+    '&longitude=' + WX_LNG +
+    '&current=temperature_2m,weather_code,wind_speed_10m' +
+    '&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset' +
+    '&timezone=' + encodeURIComponent(WX_TZ) +
+    '&forecast_days=1';
+
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('Weather HTTP ' + resp.status);
+  const d = await resp.json();
+
+  const temp    = Math.round(d.current.temperature_2m);
+  const code    = d.current.weather_code;
+  const wind    = Math.round(d.current.wind_speed_10m);
+  const maxT    = Math.round(d.daily.temperature_2m_max[0]);
+  const minT    = Math.round(d.daily.temperature_2m_min[0]);
+  const sunrise = d.daily.sunrise[0].slice(11, 16); // HH:MM
+  const sunset  = d.daily.sunset[0].slice(11, 16);
+  const icon    = WMO_ICONS[code] || '🌡️';
+  const desc    = WMO_DESC[code]  || '';
+
+  const el = document.getElementById('weather');
+  el.innerHTML =
+    `<div class="wx-icon">${icon}</div>
+     <div class="wx-temp">${temp}°C</div>
+     <div style="font-size:0.8rem;color:var(--muted)">${desc}</div>
+     <div class="wx-divider"></div>
+     <div class="wx-item"><div class="wx-label">High / Low</div><div class="wx-value">${maxT}° / ${minT}°</div></div>
+     <div class="wx-item"><div class="wx-label">Wind</div><div class="wx-value">${wind} km/h</div></div>
+     <div class="wx-divider"></div>
+     <div class="wx-item"><div class="wx-label">🌅 Sunrise</div><div class="wx-value">${sunrise}</div></div>
+     <div class="wx-item"><div class="wx-label">🌇 Sunset</div><div class="wx-value">${sunset}</div></div>`;
+}
+
+buildLegend();
+load();
+
+// Auto-refresh
+setInterval(load, REFRESH_MINS * 60 * 1000);
+</script>
+</body>
+</html>
