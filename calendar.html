@@ -380,7 +380,6 @@ function parseICal(text, cal) {
 
   const events = [];
 
-  // Use local midnight as boundaries (browser uses device timezone)
   const now   = new Date();
   const start = new Date(now); start.setHours(0, 0, 0, 0);
   const end   = new Date(start);
@@ -388,15 +387,28 @@ function parseICal(text, cal) {
 
   const vevents = comp.getAllSubcomponents('vevent');
 
+  // Separate master events from exception overrides (RECURRENCE-ID events)
+  const masters    = [];
+  const exceptions = {}; // key: "uid::dateStr"
+
   vevents.forEach(vevent => {
     try {
       const event = new ICAL.Event(vevent);
       if (!event.summary) return;
+      if (event.isRecurrenceException()) {
+        const key = event.uid + '::' + event.recurrenceId.toJSDate().toDateString();
+        exceptions[key] = event;
+      } else {
+        masters.push(event);
+      }
+    } catch(e) {}
+  });
 
+  masters.forEach(event => {
+    try {
       if (event.isRecurring()) {
-        // Use RecurExpansion from dtstart, skip occurrences before our window
         const expand = new ICAL.RecurExpansion({
-          component: vevent,
+          component: event.component,
           dtstart:   event.startDate
         });
 
@@ -405,29 +417,42 @@ function parseICal(text, cal) {
         while ((next = expand.next()) && count < 500) {
           count++;
           const nextJS = next.toJSDate();
-          if (nextJS < start) continue;  // skip past occurrences
-          if (nextJS >= end) break;       // stop past our window
-          events.push(makeEvent(event, nextJS, next.isDate, cal));
+          if (nextJS < start) continue;
+          if (nextJS >= end) break;
+
+          // Check if this occurrence has an exception override
+          const key = event.uid + '::' + nextJS.toDateString();
+          if (exceptions[key]) {
+            // Use the exception event instead
+            const ex = exceptions[key];
+            const exStart = ex.startDate.toJSDate();
+            const exEnd   = ex.endDate   ? ex.endDate.toJSDate() : null;
+            if (exStart >= start && exStart < end) {
+              events.push(makeEvent(ex, exStart, ex.startDate.isDate, exEnd, cal));
+            }
+          } else {
+            const evEnd = event.endDate ? event.endDate.toJSDate() : null;
+            events.push(makeEvent(event, nextJS, next.isDate, evEnd, cal));
+          }
         }
       } else {
         const evStart = event.startDate.toJSDate();
-        const evEnd   = event.endDate ? event.endDate.toJSDate() : evStart;
-        if (evEnd >= start && evStart < end) {
-          events.push(makeEvent(event, evStart, event.startDate.isDate, cal));
+        const evEnd   = event.endDate ? event.endDate.toJSDate() : null;
+        if (evStart >= start && evStart < end) {
+          events.push(makeEvent(event, evStart, event.startDate.isDate, evEnd, cal));
         }
       }
-    } catch(e) {
-      // skip malformed events
-    }
+    } catch(e) {}
   });
 
   return events;
 }
 
-function makeEvent(event, startDate, allDay, cal) {
+function makeEvent(event, startDate, allDay, endDate, cal) {
   return {
     title:  event.summary,
     start:  startDate,
+    end:    endDate,
     allDay: allDay,
     color:  cal.color,
     cal:    cal.name
@@ -497,9 +522,24 @@ function renderEvents(allEvents, cols) {
       if (!ev.allDay) {
         const h = ev.start.getHours();
         const m = ev.start.getMinutes();
-        // Don't show 00:00 — treat as all-day visually
         if (h !== 0 || m !== 0) {
-          timeStr = `<span class="event-time">${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}</span>`;
+          let t = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+          if (ev.end) {
+            const eh = ev.end.getHours();
+            const em = ev.end.getMinutes();
+            if (eh !== 0 || em !== 0) {
+              // Show duration if same-day, otherwise just end time
+              const diffMs  = ev.end - ev.start;
+              const diffMins = Math.round(diffMs / 60000);
+              const durStr = diffMins >= 60
+                ? (diffMins % 60 === 0
+                    ? (diffMins/60) + 'h'
+                    : Math.floor(diffMins/60) + 'h' + (diffMins%60) + 'm')
+                : diffMins + 'm';
+              t += ' <span style="opacity:0.5">· ' + durStr + '</span>';
+            }
+          }
+          timeStr = `<span class="event-time">${t}</span>`;
         }
       }
 
