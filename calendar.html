@@ -370,12 +370,23 @@ async function fetchCalendar(cal) {
 function parseICal(text, cal) {
   const jcal = ICAL.parse(text);
   const comp  = new ICAL.Component(jcal);
+
+  // Register any timezones embedded in the calendar
+  const vtimezones = comp.getAllSubcomponents('vtimezone');
+  vtimezones.forEach(vtz => {
+    try { ICAL.TimezoneService.register(vtz); } catch(e) {}
+  });
+
   const events = [];
 
   const now   = new Date();
   const start = new Date(now); start.setHours(0, 0, 0, 0);
   const end   = new Date(start);
   end.setDate(end.getDate() + DAYS_TO_SHOW);
+
+  // Use UTC-aware ICAL.Time for range
+  const rangeStart = ICAL.Time.fromJSDate(start, false);
+  const rangeEnd   = ICAL.Time.fromJSDate(end, false);
 
   const vevents = comp.getAllSubcomponents('vevent');
 
@@ -385,19 +396,17 @@ function parseICal(text, cal) {
       if (!event.summary) return;
 
       if (event.isRecurring()) {
-        const rangeStart = ICAL.Time.fromJSDate(start, false);
-        const rangeEnd   = ICAL.Time.fromJSDate(end, false);
         const iter = event.iterator(rangeStart);
         let next;
         let count = 0;
         while ((next = iter.next()) && count < 50) {
           count++;
-          if (next.toJSDate() >= end) break;
-          const dur = event.duration;
+          const nextJS = next.toJSDate();
+          if (nextJS >= end) break;
           const evEnd = next.clone();
-          evEnd.addDuration(dur);
+          evEnd.addDuration(event.duration);
           if (evEnd.toJSDate() >= start) {
-            events.push(makeEvent(event, next.toJSDate(), event.startDate.isDate, cal));
+            events.push(makeEvent(event, nextJS, next.isDate, cal));
           }
         }
       } else {
@@ -486,9 +495,12 @@ function renderEvents(allEvents, cols) {
 
       let timeStr = '';
       if (!ev.allDay) {
-        const h = String(ev.start.getHours()).padStart(2,'0');
-        const m = String(ev.start.getMinutes()).padStart(2,'0');
-        timeStr = `<span class="event-time">${h}:${m}</span>`;
+        const h = ev.start.getHours();
+        const m = ev.start.getMinutes();
+        // Don't show 00:00 — treat as all-day visually
+        if (h !== 0 || m !== 0) {
+          timeStr = `<span class="event-time">${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}</span>`;
+        }
       }
 
       div.innerHTML = timeStr + `<span class="event-title">${escHtml(ev.title)}</span>`;
