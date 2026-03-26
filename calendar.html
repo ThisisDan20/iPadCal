@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNiIgZmlsbD0iIzE2MWIyMiIvPgogIDx0ZXh0IHg9IjE2IiB5PSIyNCIgZm9udC1zaXplPSIyMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9InNlcmlmIj7wn5OFPC90ZXh0Pgo8L3N2Zz4=">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Family Calendar</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -379,14 +380,11 @@ function parseICal(text, cal) {
 
   const events = [];
 
+  // Use local midnight as boundaries (browser uses device timezone)
   const now   = new Date();
   const start = new Date(now); start.setHours(0, 0, 0, 0);
   const end   = new Date(start);
   end.setDate(end.getDate() + DAYS_TO_SHOW);
-
-  // Use UTC-aware ICAL.Time for range
-  const rangeStart = ICAL.Time.fromJSDate(start, false);
-  const rangeEnd   = ICAL.Time.fromJSDate(end, false);
 
   const vevents = comp.getAllSubcomponents('vevent');
 
@@ -396,18 +394,20 @@ function parseICal(text, cal) {
       if (!event.summary) return;
 
       if (event.isRecurring()) {
-        const iter = event.iterator(rangeStart);
-        let next;
+        // Use RecurExpansion from dtstart, skip occurrences before our window
+        const expand = new ICAL.RecurExpansion({
+          component: vevent,
+          dtstart:   event.startDate
+        });
+
         let count = 0;
-        while ((next = iter.next()) && count < 50) {
+        let next;
+        while ((next = expand.next()) && count < 500) {
           count++;
           const nextJS = next.toJSDate();
-          if (nextJS >= end) break;
-          const evEnd = next.clone();
-          evEnd.addDuration(event.duration);
-          if (evEnd.toJSDate() >= start) {
-            events.push(makeEvent(event, nextJS, next.isDate, cal));
-          }
+          if (nextJS < start) continue;  // skip past occurrences
+          if (nextJS >= end) break;       // stop past our window
+          events.push(makeEvent(event, nextJS, next.isDate, cal));
         }
       } else {
         const evStart = event.startDate.toJSDate();
