@@ -99,8 +99,8 @@
       flex-shrink: 0;
     }
 
-    /* ── Weather bar ── */
-    #weather {
+    /* ── Sun/Moon header bar ── */
+    #sun-bar {
       display: flex;
       align-items: center;
       gap: 16px;
@@ -108,49 +108,138 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 12px 18px;
-      font-size: clamp(0.9rem, 2vw, 1rem);
-      color: var(--muted);
       flex-wrap: wrap;
-      row-gap: 10px;
+      row-gap: 8px;
     }
 
-    .wx-temp {
-      font-family: 'DM Mono', monospace;
-      font-size: clamp(1.6rem, 4vw, 2.2rem);
-      font-weight: 400;
-      color: var(--text);
+    .sun-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sun-icon {
+      font-size: clamp(1.4rem, 3vw, 1.8rem);
       line-height: 1;
     }
 
-    .wx-icon {
-      font-size: clamp(1.6rem, 4vw, 2.2rem);
-      line-height: 1;
-    }
-
-    .wx-item {
+    .sun-detail {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
     }
 
-    .wx-label {
-      font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+    .sun-label {
+      font-size: clamp(0.6rem, 1.4vw, 0.7rem);
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--muted);
     }
 
-    .wx-value {
+    .sun-value {
       font-family: 'DM Mono', monospace;
       font-size: clamp(0.9rem, 2vw, 1.1rem);
       color: var(--text);
+      font-weight: 500;
     }
 
-    .wx-divider {
+    .sun-divider {
       width: 1px;
       height: 28px;
       background: var(--border);
       flex-shrink: 0;
+    }
+
+    .moon-chart {
+      flex: 1;
+      min-width: 160px;
+      height: 32px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .moon-track {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    .moon-fill {
+      position: absolute;
+      left: 0;
+      height: 2px;
+      background: linear-gradient(to right, #7d8590, #e6edf3);
+      border-radius: 2px;
+    }
+
+    .moon-marker {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.3rem;
+      line-height: 1;
+      filter: drop-shadow(0 0 4px rgba(230,237,243,0.3));
+    }
+
+    .moon-phase-label {
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      color: var(--muted);
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Per-day weather strip ── */
+    .wx-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .wx-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 7px 2px;
+      gap: 2px;
+      border-right: 1px solid var(--border);
+    }
+
+    .wx-slot:last-child { border-right: none; }
+
+    .wx-slot-time {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(0.6rem, 1.4vw, 0.72rem);
+      color: var(--muted);
+    }
+
+    .wx-slot-icon {
+      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+      line-height: 1;
+      margin: 2px 0;
+    }
+
+    .wx-slot-temp {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(0.72rem, 1.6vw, 0.88rem);
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .wx-slot-mm {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(0.58rem, 1.3vw, 0.68rem);
+      color: #58a6ff;
     }
 
     /* ── Days grid ── */
@@ -266,7 +355,7 @@
     @media (max-width: 860px) {
       #app { padding: 16px 16px 28px; }
       #days { grid-template-columns: repeat(4, 1fr); }
-      .wx-divider { display: none; }
+      .sun-divider { display: none; }
     }
 
     /* Large phone landscape / small tablet: 3 columns */
@@ -274,21 +363,20 @@
       #app { padding: 12px 12px 24px; gap: 12px; }
       #days { grid-template-columns: repeat(3, 1fr); gap: 8px; }
       header { padding-bottom: 12px; }
+      .wx-strip { grid-template-columns: repeat(5, 1fr); }
     }
 
     /* Phone portrait: 1 column, full width, scrollable */
     @media (max-width: 480px) {
       html, body { overflow-y: auto; height: auto; }
       #app { padding: 12px 10px 32px; gap: 10px; min-height: 100dvh; }
-      #days {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
+      #days { grid-template-columns: 1fr; gap: 8px; }
       .day-col { padding: 14px 12px; }
       #clock { font-size: clamp(2.4rem, 12vw, 3.2rem); }
       .legend { gap: 8px 14px; }
-      #weather { gap: 12px; padding: 10px 14px; }
-      .wx-divider { display: none; }
+      #sun-bar { gap: 12px; padding: 10px 14px; }
+      .sun-divider { display: none; }
+      .moon-chart { min-width: 100px; }
     }
   </style>
 </head>
@@ -301,7 +389,7 @@
     </div>
     <div class="legend" id="legend"></div>
   </header>
-  <div id="weather">Loading weather…</div>
+  <div id="sun-bar">Loading…</div>
   <div id="days"></div>
 </div>
 <div id="status">Initialising...</div>
@@ -597,115 +685,283 @@ function escHtml(str) {
 }
 
 // ─────────────────────────────────────────────
-//  Main load
-// ─────────────────────────────────────────────
-async function load() {
-  const status = document.getElementById('status');
-  status.textContent = 'Fetching calendars…';
-
-  const cols = buildDayColumns();
-
-  const [wxResult] = await Promise.allSettled([fetchWeather()]);
-  if (wxResult.status === 'rejected') {
-    document.getElementById('weather').textContent = 'Weather unavailable';
-  }
-
-  const results = await Promise.allSettled(CALENDARS.map(fetchCalendar));
-
-  const allEvents = [];
-  const errors = [];
-
-  results.forEach((r, i) => {
-    if (r.status === 'fulfilled') {
-      allEvents.push(...r.value);
-    } else {
-      errors.push(CALENDARS[i].name + ': ' + r.reason.message);
-    }
-  });
-
-  renderEvents(allEvents, cols);
-
-  const now = new Date();
-  const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-
-  if (errors.length) {
-    status.textContent = '⚠ ' + errors.join(' | ') + ' — updated ' + timeStr;
-  } else {
-    status.textContent = 'Updated ' + timeStr;
-  }
-}
-
-// ─────────────────────────────────────────────
 //  Weather — Open-Meteo (Glen Eden, Auckland)
 // ─────────────────────────────────────────────
-const WX_LAT  = -36.9029;
-const WX_LNG  = 174.6476;
-const WX_TZ   = 'Pacific/Auckland';
+const WX_LAT = -36.9029;
+const WX_LNG = 174.6476;
+const WX_TZ  = 'Pacific/Auckland';
+
+// Hours to snapshot for the per-day strip
+// 4:30pm = hour 16 (we pick closest hourly slot)
+const WX_HOURS = [7, 9, 12, 16, 19];
+const WX_LABELS = ['7am','9am','12pm','4:30','7pm'];
 
 const WMO_ICONS = {
   0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
   45:'🌫️', 48:'🌫️',
   51:'🌦️', 53:'🌦️', 55:'🌧️',
   61:'🌧️', 63:'🌧️', 65:'🌧️',
-  71:'🌨️', 73:'🌨️', 75:'🌨️',
-  77:'🌨️',
+  71:'🌨️', 73:'🌨️', 75:'🌨️', 77:'🌨️',
   80:'🌦️', 81:'🌧️', 82:'⛈️',
   85:'🌨️', 86:'🌨️',
   95:'⛈️', 96:'⛈️', 99:'⛈️'
 };
 
-const WMO_DESC = {
-  0:'Clear sky', 1:'Mainly clear', 2:'Partly cloudy', 3:'Overcast',
-  45:'Fog', 48:'Icy fog',
-  51:'Light drizzle', 53:'Drizzle', 55:'Heavy drizzle',
-  61:'Light rain', 63:'Rain', 65:'Heavy rain',
-  71:'Light snow', 73:'Snow', 75:'Heavy snow', 77:'Snow grains',
-  80:'Showers', 81:'Heavy showers', 82:'Violent showers',
-  85:'Snow showers', 86:'Heavy snow showers',
-  95:'Thunderstorm', 96:'Thunderstorm w/ hail', 99:'Thunderstorm w/ heavy hail'
-};
+// weeklyWeather[dateStr] = [{icon,temp,mm}, ...] for each WX_HOURS slot
+let weeklyWeather = {};
 
 async function fetchWeather() {
-  const url = 'https://api.open-meteo.com/v1/forecast' +
-    '?latitude=' + WX_LAT +
-    '&longitude=' + WX_LNG +
-    '&current=temperature_2m,weather_code,wind_speed_10m' +
-    '&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset' +
-    '&timezone=' + encodeURIComponent(WX_TZ) +
-    '&forecast_days=1';
+  const url = 'https://api.open-meteo.com/v1/forecast'
+    + '?latitude=' + WX_LAT
+    + '&longitude=' + WX_LNG
+    + '&hourly=temperature_2m,weather_code,precipitation'
+    + '&daily=sunrise,sunset'
+    + '&timezone=' + encodeURIComponent(WX_TZ)
+    + '&forecast_days=7';
 
   const resp = await fetch(url);
   if (!resp.ok) throw new Error('Weather HTTP ' + resp.status);
   const d = await resp.json();
 
-  const temp    = Math.round(d.current.temperature_2m);
-  const code    = d.current.weather_code;
-  const wind    = Math.round(d.current.wind_speed_10m);
-  const maxT    = Math.round(d.daily.temperature_2m_max[0]);
-  const minT    = Math.round(d.daily.temperature_2m_min[0]);
-  const sunrise = d.daily.sunrise[0].slice(11, 16); // HH:MM
-  const sunset  = d.daily.sunset[0].slice(11, 16);
-  const icon    = WMO_ICONS[code] || '🌡️';
-  const desc    = WMO_DESC[code]  || '';
+  // Build a lookup: ISO-hour-string → {temp, code, mm}
+  const hourly = {};
+  d.hourly.time.forEach((t, i) => {
+    hourly[t] = {
+      temp: Math.round(d.hourly.temperature_2m[i]),
+      code: d.hourly.weather_code[i],
+      mm:   Math.round(d.hourly.precipitation[i] * 10) / 10
+    };
+  });
 
-  const el = document.getElementById('weather');
-  el.innerHTML =
-    `<div class="wx-icon">${icon}</div>
-     <div class="wx-temp">${temp}°C</div>
-     <div style="font-size:0.8rem;color:var(--muted)">${desc}</div>
-     <div class="wx-divider"></div>
-     <div class="wx-item"><div class="wx-label">High / Low</div><div class="wx-value">${maxT}° / ${minT}°</div></div>
-     <div class="wx-item"><div class="wx-label">Wind</div><div class="wx-value">${wind} km/h</div></div>
-     <div class="wx-divider"></div>
-     <div class="wx-item"><div class="wx-label">🌅 Sunrise</div><div class="wx-value">${sunrise}</div></div>
-     <div class="wx-item"><div class="wx-label">🌇 Sunset</div><div class="wx-value">${sunset}</div></div>`;
+  // For each of the 7 forecast days, extract our 5 slots
+  weeklyWeather = {};
+  d.daily.time.forEach((dateStr, dayIdx) => {
+    weeklyWeather[dateStr] = WX_HOURS.map(h => {
+      const key = dateStr + 'T' + String(h).padStart(2,'0') + ':00';
+      const slot = hourly[key] || {};
+      return {
+        icon: WMO_ICONS[slot.code] || '🌡️',
+        temp: slot.temp !== undefined ? slot.temp + '°' : '—',
+        mm:   slot.mm !== undefined ? slot.mm + 'mm' : '—'
+      };
+    });
+  });
+
+  // Sun/moon header bar
+  renderSunBar(d.daily.sunrise[0], d.daily.sunset[0]);
+
+  // Cache weather
+  try {
+    localStorage.setItem('wx_cache', JSON.stringify({
+      ts: Date.now(),
+      weeklyWeather,
+      sunrise: d.daily.sunrise[0],
+      sunset:  d.daily.sunset[0]
+    }));
+  } catch(e) {}
+}
+
+// ─────────────────────────────────────────────
+//  Moon phase (calculated, no API)
+// ─────────────────────────────────────────────
+function getMoonPhase(date) {
+  // Known new moon: Jan 6 2000
+  const known = new Date(2000, 0, 6);
+  const cycle = 29.53058867;
+  const days  = (date - known) / 86400000;
+  const phase = ((days % cycle) + cycle) % cycle;
+  const pct   = phase / cycle;
+
+  let emoji, name;
+  if      (pct < 0.03 || pct > 0.97) { emoji = '🌑'; name = 'New Moon'; }
+  else if (pct < 0.22)                { emoji = '🌒'; name = 'Waxing Crescent'; }
+  else if (pct < 0.28)                { emoji = '🌓'; name = 'First Quarter'; }
+  else if (pct < 0.47)                { emoji = '🌔'; name = 'Waxing Gibbous'; }
+  else if (pct < 0.53)                { emoji = '🌕'; name = 'Full Moon'; }
+  else if (pct < 0.72)                { emoji = '🌖'; name = 'Waning Gibbous'; }
+  else if (pct < 0.78)                { emoji = '🌗'; name = 'Last Quarter'; }
+  else                                { emoji = '🌘'; name = 'Waning Crescent'; }
+
+  return { emoji, name, pct };
+}
+
+function renderSunBar(sunriseISO, sunsetISO) {
+  const sunrise = sunriseISO.slice(11, 16);
+  const sunset  = sunsetISO.slice(11, 16);
+  const moon    = getMoonPhase(new Date());
+  const moonPct = Math.round(moon.pct * 100);
+
+  const el = document.getElementById('sun-bar');
+  el.innerHTML = `
+    <div class="sun-item">
+      <span class="sun-icon">🌅</span>
+      <div class="sun-detail">
+        <span class="sun-label">Sunrise</span>
+        <span class="sun-value">${sunrise}</span>
+      </div>
+    </div>
+    <div class="sun-divider"></div>
+    <div class="sun-item">
+      <span class="sun-icon">🌇</span>
+      <div class="sun-detail">
+        <span class="sun-label">Sunset</span>
+        <span class="sun-value">${sunset}</span>
+      </div>
+    </div>
+    <div class="sun-divider"></div>
+    <div class="sun-item" style="flex:1;min-width:180px;">
+      <span class="sun-icon">${moon.emoji}</span>
+      <div class="sun-detail" style="flex:1;">
+        <span class="sun-label">Moon · ${moon.name}</span>
+        <div class="moon-chart">
+          <div class="moon-track"></div>
+          <div class="moon-fill" style="width:${moonPct}%"></div>
+          <span class="moon-marker" style="left:${moonPct}%">${moon.emoji}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+//  Render per-day weather strip
+// ─────────────────────────────────────────────
+function renderDayWeather(col, dateStr) {
+  const slots = weeklyWeather[dateStr];
+  if (!slots) return;
+
+  const strip = document.createElement('div');
+  strip.className = 'wx-strip';
+
+  slots.forEach((s, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'wx-slot';
+    slot.innerHTML =
+      `<span class="wx-slot-time">${WX_LABELS[i]}</span>` +
+      `<span class="wx-slot-icon">${s.icon}</span>` +
+      `<span class="wx-slot-temp">${s.temp}</span>` +
+      `<span class="wx-slot-mm">${s.mm}</span>`;
+    strip.appendChild(slot);
+  });
+
+  // Insert after day-head, before events
+  const eventsEl = col.querySelector('.events');
+  col.insertBefore(strip, eventsEl);
+}
+
+// ─────────────────────────────────────────────
+//  localStorage cache helpers
+// ─────────────────────────────────────────────
+const CACHE_KEY   = 'family_cal_cache';
+const CACHE_MAX_AGE = 60 * 60 * 1000; // 1 hour
+
+function saveCache(allEvents) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      ts: Date.now(),
+      events: allEvents.map(e => ({
+        ...e,
+        start: e.start ? e.start.getTime() : null,
+        end:   e.end   ? e.end.getTime()   : null
+      }))
+    }));
+  } catch(e) {}
+}
+
+function loadCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { ts, events } = JSON.parse(raw);
+    if (Date.now() - ts > CACHE_MAX_AGE) return null;
+    return events.map(e => ({
+      ...e,
+      start: e.start ? new Date(e.start) : null,
+      end:   e.end   ? new Date(e.end)   : null
+    }));
+  } catch(e) { return null; }
+}
+
+// ─────────────────────────────────────────────
+//  Main load
+// ─────────────────────────────────────────────
+async function load(background = false) {
+  const status = document.getElementById('status');
+  if (!background) status.textContent = 'Loading…';
+
+  // Show cached events instantly on first load
+  if (!background) {
+    const cached = loadCache();
+    if (cached) {
+      const cols = buildDayColumns();
+      renderEvents(cached, cols);
+      status.textContent = 'From cache — refreshing…';
+    } else {
+      buildDayColumns();
+    }
+  }
+
+  // Fetch weather + calendars in parallel
+  const [wxResult, ...calResults] = await Promise.allSettled([
+    fetchWeather(),
+    ...CALENDARS.map(fetchCalendar)
+  ]);
+
+  // Re-build columns with fresh data (including weather strips)
+  const cols = buildDayColumns();
+
+  const allEvents = [];
+  const errors = [];
+
+  calResults.forEach((r, i) => {
+    if (r.status === 'fulfilled') {
+      allEvents.push(...r.value);
+    } else {
+      // Only show errors for real (non-placeholder) URLs
+      if (!CALENDARS[i].url.includes('REPLACE_WITH')) {
+        errors.push(CALENDARS[i].name + ': ' + r.reason.message);
+      }
+    }
+  });
+
+  renderEvents(allEvents, cols);
+  saveCache(allEvents);
+
+  // Add weather strips to each day column
+  if (wxResult.status === 'fulfilled') {
+    cols.forEach(({ el, date }) => {
+      const dateStr = date.toISOString().slice(0, 10);
+      renderDayWeather(el, dateStr);
+    });
+  } else {
+    document.getElementById('sun-bar').textContent = 'Weather unavailable';
+  }
+
+  // Try to load wx from localStorage if API failed
+  if (wxResult.status === 'rejected') {
+    try {
+      const wxCached = JSON.parse(localStorage.getItem('wx_cache') || 'null');
+      if (wxCached) {
+        weeklyWeather = wxCached.weeklyWeather;
+        renderSunBar(wxCached.sunrise, wxCached.sunset);
+        cols.forEach(({ el, date }) => {
+          renderDayWeather(el, date.toISOString().slice(0,10));
+        });
+      }
+    } catch(e) {}
+  }
+
+  const now = new Date();
+  const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  status.textContent = errors.length
+    ? '⚠ ' + errors.join(' | ') + ' — ' + timeStr
+    : 'Updated ' + timeStr;
 }
 
 buildLegend();
-load();
+load(false);
 
-// Auto-refresh
-setInterval(load, REFRESH_MINS * 60 * 1000);
+// Background refresh — rebuilds silently
+setInterval(() => load(true), REFRESH_MINS * 60 * 1000);
 </script>
 </body>
 </html>
