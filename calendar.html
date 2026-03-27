@@ -273,11 +273,11 @@
     }
 
     .wx-slot {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-rows: 1.2em 2.2em 1.4em 1.1em;
       align-items: center;
-      padding: 5px 2px;
-      gap: 1px;
+      justify-items: center;
+      padding: 6px 2px;
       border-right: 1px solid var(--border);
     }
 
@@ -287,6 +287,7 @@
       font-family: 'DM Mono', monospace;
       font-size: clamp(0.52rem, 1.1vw, 0.65rem);
       color: var(--muted);
+      align-self: center;
     }
 
     .wx-slot-icon {
@@ -296,7 +297,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 1.4em;
+      width: 100%;
+      overflow: hidden;
     }
 
     .wx-slot-temp {
@@ -304,12 +306,14 @@
       font-size: clamp(0.62rem, 1.3vw, 0.78rem);
       font-weight: 500;
       color: var(--text);
+      align-self: center;
     }
 
     .wx-slot-mm {
       font-family: 'DM Mono', monospace;
       font-size: clamp(0.52rem, 1.1vw, 0.62rem);
       color: #58a6ff;
+      align-self: center;
     }
 
     .events {
