@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Family Calendar</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script>/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -33,7 +33,7 @@
       height: 100%;
       background: var(--bg);
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
       overflow-x: hidden;
     }
 
@@ -195,52 +195,7 @@
       letter-spacing: 0.04em;
     }
 
-    /* ── Per-day weather strip ── */
-    .wx-strip {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 10px;
-    }
 
-    .wx-slot {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 7px 2px;
-      gap: 2px;
-      border-right: 1px solid var(--border);
-    }
-
-    .wx-slot:last-child { border-right: none; }
-
-    .wx-slot-time {
-      font-family: 'DM Mono', monospace;
-      font-size: clamp(0.6rem, 1.4vw, 0.72rem);
-      color: var(--muted);
-    }
-
-    .wx-slot-icon {
-      font-size: clamp(1.1rem, 2.5vw, 1.5rem);
-      line-height: 1;
-      margin: 2px 0;
-    }
-
-    .wx-slot-temp {
-      font-family: 'DM Mono', monospace;
-      font-size: clamp(0.72rem, 1.6vw, 0.88rem);
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .wx-slot-mm {
-      font-family: 'DM Mono', monospace;
-      font-size: clamp(0.58rem, 1.3vw, 0.68rem);
-      color: #58a6ff;
-    }
 
     /* ── Days grid ── */
     #days {
@@ -268,14 +223,23 @@
 
     .day-head {
       display: flex;
-      flex-direction: column;
-      gap: 2px;
-      padding-bottom: 12px;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-bottom: 10px;
       border-bottom: 1px solid var(--border);
     }
 
+    .day-head-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
     .day-name {
-      font-size: clamp(0.8rem, 1.8vw, 1rem);
+      font-size: clamp(0.75rem, 1.6vw, 0.95rem);
       font-weight: 600;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -285,13 +249,60 @@
     .day-col.is-today .day-name { color: var(--cal1); }
 
     .day-num {
-      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-size: clamp(1.6rem, 3.5vw, 2.6rem);
       font-weight: 300;
       line-height: 1;
       color: var(--text);
     }
 
     .day-col.is-today .day-num { color: var(--cal1); }
+
+    /* Weather inline with day head */
+    .wx-inline {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      flex: 1;
+      gap: 0;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .wx-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 5px 2px;
+      gap: 1px;
+      border-right: 1px solid var(--border);
+    }
+
+    .wx-slot:last-child { border-right: none; }
+
+    .wx-slot-time {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(0.52rem, 1.1vw, 0.65rem);
+      color: var(--muted);
+    }
+
+    .wx-slot-icon {
+      font-size: clamp(0.95rem, 2vw, 1.3rem);
+      line-height: 1;
+    }
+
+    .wx-slot-temp {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(0.62rem, 1.3vw, 0.78rem);
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .wx-slot-mm {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(0.52rem, 1.1vw, 0.62rem);
+      color: #58a6ff;
+    }
 
     .events {
       display: flex;
@@ -363,7 +374,7 @@
       #app { padding: 12px 12px 24px; gap: 12px; }
       #days { grid-template-columns: repeat(3, 1fr); gap: 8px; }
       header { padding-bottom: 12px; }
-      .wx-strip { grid-template-columns: repeat(5, 1fr); }
+
     }
 
     /* Phone portrait: 1 column, full width, scrollable */
@@ -613,8 +624,11 @@ function buildDayColumns() {
 
     col.innerHTML =
       `<div class="day-head">
-        <div class="day-name">${isToday ? 'Today' : names[d.getDay()]}</div>
-        <div class="day-num">${d.getDate()}</div>
+        <div class="day-head-left">
+          <div class="day-name">${isToday ? 'Today' : names[d.getDay()]}</div>
+          <div class="day-num">${d.getDate()}</div>
+        </div>
+        <div class="wx-inline" id="wx-${localDateStr(d)}"></div>
        </div>
        <div class="events"></div>`;
 
@@ -705,12 +719,12 @@ const WX_LABELS = ['7am','9am','12pm','4:30','7pm'];
 
 const WMO_ICONS = {
   0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
-  45:'🌫️', 48:'🌫️',
+  45:'🌁', 48:'🌁',
   51:'🌦️', 53:'🌦️', 55:'🌧️',
   61:'🌧️', 63:'🌧️', 65:'🌧️',
-  71:'🌨️', 73:'🌨️', 75:'🌨️', 77:'🌨️',
+  71:'❄️', 73:'❄️', 75:'❄️', 77:'❄️',
   80:'🌦️', 81:'🌧️', 82:'⛈️',
-  85:'🌨️', 86:'🌨️',
+  85:'❄️', 86:'❄️',
   95:'⛈️', 96:'⛈️', 99:'⛈️'
 };
 
@@ -836,23 +850,17 @@ function renderDayWeather(col, dateStr) {
   const slots = weeklyWeather[dateStr];
   if (!slots) return;
 
-  const strip = document.createElement('div');
-  strip.className = 'wx-strip';
+  const inline = col.querySelector('#wx-' + dateStr);
+  if (!inline) return;
 
-  slots.forEach((s, i) => {
-    const slot = document.createElement('div');
-    slot.className = 'wx-slot';
-    slot.innerHTML =
-      `<span class="wx-slot-time">${WX_LABELS[i]}</span>` +
-      `<span class="wx-slot-icon">${s.icon}</span>` +
-      `<span class="wx-slot-temp">${s.temp}</span>` +
-      `<span class="wx-slot-mm">${s.mm}</span>`;
-    strip.appendChild(slot);
-  });
-
-  // Insert after day-head, before events
-  const eventsEl = col.querySelector('.events');
-  col.insertBefore(strip, eventsEl);
+  inline.innerHTML = slots.map((s, i) =>
+    `<div class="wx-slot">` +
+    `<span class="wx-slot-time">${WX_LABELS[i]}</span>` +
+    `<span class="wx-slot-icon">${s.icon}</span>` +
+    `<span class="wx-slot-temp">${s.temp}</span>` +
+    `<span class="wx-slot-mm">${s.mm}</span>` +
+    `</div>`
+  ).join('');
 }
 
 // ─────────────────────────────────────────────
