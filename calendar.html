@@ -423,6 +423,13 @@ const CALENDARS = [
 
 const DAYS_TO_SHOW  = 7;    // columns shown
 const REFRESH_MINS  = 30;   // auto-refresh interval
+
+// Format a JS Date as YYYY-MM-DD in LOCAL time (not UTC)
+function localDateStr(d) {
+  return d.getFullYear() + '-'
+    + String(d.getMonth() + 1).padStart(2, '0') + '-'
+    + String(d.getDate()).padStart(2, '0');
+}
 // Your Cloudflare Worker proxy URL - see worker.js for setup instructions
 const WORKER_URL = 'https://nameless-tooth-8a13.dgroberts.workers.dev';
 const CORS_PROXIES = [
@@ -929,7 +936,7 @@ async function load(background = false) {
   // Add weather strips to each day column
   if (wxResult.status === 'fulfilled') {
     cols.forEach(({ el, date }) => {
-      const dateStr = date.toISOString().slice(0, 10);
+      const dateStr = localDateStr(date);
       renderDayWeather(el, dateStr);
     });
   } else {
@@ -944,7 +951,7 @@ async function load(background = false) {
         weeklyWeather = wxCached.weeklyWeather;
         renderSunBar(wxCached.sunrise, wxCached.sunset);
         cols.forEach(({ el, date }) => {
-          renderDayWeather(el, date.toISOString().slice(0,10));
+          renderDayWeather(el, localDateStr(date));
         });
       }
     } catch(e) {}
