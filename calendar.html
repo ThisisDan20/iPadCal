@@ -849,6 +849,8 @@ function renderSunBar(sunriseISO, sunsetISO) {
   const moonPct = Math.round(moon.pct * 100);
 
   const el = document.getElementById('sun-bar');
+  el.dataset.sunrise = sunriseISO;
+  el.dataset.sunset  = sunsetISO;
   el.innerHTML = `
     <div class="sun-item">
       <span class="sun-icon">🌅</span>
@@ -902,8 +904,10 @@ function renderDayWeather(col, dateStr) {
 // ─────────────────────────────────────────────
 //  localStorage cache helpers
 // ─────────────────────────────────────────────
-const CACHE_KEY   = 'family_cal_cache';
-const CACHE_MAX_AGE = 60 * 60 * 1000; // 1 hour
+const CACHE_KEY     = 'family_cal_cache';
+const WX_CACHE_KEY  = 'family_wx_cache';
+const CACHE_MAX_AGE = 60 * 60 * 1000;    // 1 hour for calendars
+const WX_MAX_AGE    = 30 * 60 * 1000;    // 30 min for weather
 
 function saveCache(allEvents) {
   try {
@@ -932,33 +936,70 @@ function loadCache() {
   } catch(e) { return null; }
 }
 
+function saveWxCache() {
+  try {
+    localStorage.setItem(WX_CACHE_KEY, JSON.stringify({
+      ts: Date.now(),
+      weeklyWeather,
+      sunrise: document.getElementById('sun-bar').dataset.sunrise || '',
+      sunset:  document.getElementById('sun-bar').dataset.sunset  || ''
+    }));
+  } catch(e) {}
+}
+
+function loadWxCache() {
+  try {
+    const raw = localStorage.getItem(WX_CACHE_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    if (Date.now() - d.ts > WX_MAX_AGE) return null;
+    return d;
+  } catch(e) { return null; }
+}
+
 // ─────────────────────────────────────────────
-//  Main load
+//  Main load — weather first, then calendars
 // ─────────────────────────────────────────────
 async function load(background = false) {
   const status = document.getElementById('status');
   if (!background) status.textContent = 'Loading…';
 
-  // Show cached events instantly on first load
-  if (!background) {
-    const cached = loadCache();
-    if (cached) {
-      const cols = buildDayColumns();
-      renderEvents(cached, cols);
-      status.textContent = 'From cache — refreshing…';
-    } else {
-      buildDayColumns();
-    }
+  // ── Step 1: Render cached data instantly ──────────────────────────
+  const cachedWx  = loadWxCache();
+  const cachedCal = loadCache();
+
+  const cols = buildDayColumns();
+
+  if (cachedCal) {
+    renderEvents(cachedCal, cols);
   }
 
-  // Fetch weather + calendars in parallel
-  const [wxResult, ...calResults] = await Promise.allSettled([
-    fetchWeather(),
-    ...CALENDARS.map(fetchCalendar)
-  ]);
+  if (cachedWx) {
+    weeklyWeather = cachedWx.weeklyWeather;
+    renderSunBar(cachedWx.sunrise, cachedWx.sunset);
+    cols.forEach(({ el, date }) => renderDayWeather(el, localDateStr(date)));
+    if (!background) status.textContent = 'From cache — refreshing…';
+  }
 
-  // Re-build columns with fresh data (including weather strips)
-  const cols = buildDayColumns();
+  // ── Step 2: Fetch weather first — fast single direct API call ─────
+  let freshCols = cols;
+
+  try {
+    await fetchWeather();
+
+    // Weather is ready — rebuild columns and render weather immediately
+    // so the strips appear before slow calendar fetches finish
+    freshCols = buildDayColumns();
+    if (cachedCal) renderEvents(cachedCal, freshCols); // keep cached events visible
+    freshCols.forEach(({ el, date }) => renderDayWeather(el, localDateStr(date)));
+    saveWxCache();
+  } catch(e) {
+    // Keep showing cached weather if fetch failed
+    if (!cachedWx) document.getElementById('sun-bar').textContent = 'Weather unavailable';
+  }
+
+  // ── Step 3: Fetch calendars (slower, proxied) ──────────────────────
+  const calResults = await Promise.allSettled(CALENDARS.map(fetchCalendar));
 
   const allEvents = [];
   const errors = [];
@@ -967,39 +1008,17 @@ async function load(background = false) {
     if (r.status === 'fulfilled') {
       allEvents.push(...r.value);
     } else {
-      // Only show errors for real (non-placeholder) URLs
       if (!CALENDARS[i].url.includes('REPLACE_WITH')) {
         errors.push(CALENDARS[i].name + ': ' + r.reason.message);
       }
     }
   });
 
-  renderEvents(allEvents, cols);
+  // Final render with fresh everything
+  const finalCols = buildDayColumns();
+  renderEvents(allEvents, finalCols);
+  finalCols.forEach(({ el, date }) => renderDayWeather(el, localDateStr(date)));
   saveCache(allEvents);
-
-  // Add weather strips to each day column
-  if (wxResult.status === 'fulfilled') {
-    cols.forEach(({ el, date }) => {
-      const dateStr = localDateStr(date);
-      renderDayWeather(el, dateStr);
-    });
-  } else {
-    document.getElementById('sun-bar').textContent = 'Weather unavailable';
-  }
-
-  // Try to load wx from localStorage if API failed
-  if (wxResult.status === 'rejected') {
-    try {
-      const wxCached = JSON.parse(localStorage.getItem('wx_cache') || 'null');
-      if (wxCached) {
-        weeklyWeather = wxCached.weeklyWeather;
-        renderSunBar(wxCached.sunrise, wxCached.sunset);
-        cols.forEach(({ el, date }) => {
-          renderDayWeather(el, localDateStr(date));
-        });
-      }
-    } catch(e) {}
-  }
 
   const now = new Date();
   const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
