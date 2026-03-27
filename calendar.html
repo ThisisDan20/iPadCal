@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Family Calendar</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script>/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -33,7 +33,7 @@
       height: 100%;
       background: var(--bg);
       color: var(--text);
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       overflow-x: hidden;
     }
 
@@ -287,8 +287,9 @@
     }
 
     .wx-slot-icon {
-      font-size: clamp(0.95rem, 2vw, 1.3rem);
-      line-height: 1;
+      width: clamp(22px, 3.5vw, 30px);
+      height: clamp(22px, 3.5vw, 30px);
+      object-fit: contain;
     }
 
     .wx-slot-temp {
@@ -717,16 +718,55 @@ const WX_TZ  = 'Pacific/Auckland';
 const WX_HOURS = [7, 9, 12, 16, 19];
 const WX_LABELS = ['7am','9am','12pm','4:30','7pm'];
 
+// Meteocons icon names — base used for daytime, -night variants swapped at render
+// Full set: https://basmilius.github.io/weather-icons/index-fill.html
+const ICON_BASE = 'https://basmilius.github.io/weather-icons/production/fill/all/';
+
 const WMO_ICONS = {
-  0:'☀️', 1:'🌤️', 2:'⛅', 3:'☁️',
-  45:'🌁', 48:'🌁',
-  51:'🌦️', 53:'🌦️', 55:'🌧️',
-  61:'🌧️', 63:'🌧️', 65:'🌧️',
-  71:'❄️', 73:'❄️', 75:'❄️', 77:'❄️',
-  80:'🌦️', 81:'🌧️', 82:'⛈️',
-  85:'❄️', 86:'❄️',
-  95:'⛈️', 96:'⛈️', 99:'⛈️'
+  0:  'clear',                        // Clear sky
+  1:  'partly-cloudy',                // Mainly clear
+  2:  'partly-cloudy',                // Partly cloudy
+  3:  'overcast',                     // Overcast
+  45: 'fog',                          // Fog
+  48: 'fog',                          // Icy fog
+  51: 'drizzle',                      // Light drizzle
+  53: 'drizzle',                      // Drizzle
+  55: 'rain',                         // Heavy drizzle
+  61: 'rain',                         // Light rain
+  63: 'rain',                         // Rain
+  65: 'extreme-rain',                 // Heavy rain
+  71: 'snow',                         // Light snow
+  73: 'snow',                         // Snow
+  75: 'extreme-snow',                 // Heavy snow
+  77: 'snowflake',                    // Snow grains
+  80: 'partly-cloudy-day-rain',       // Showers (always day icon - no night variant)
+  81: 'rain',                         // Heavy showers
+  82: 'extreme-rain',                 // Violent showers
+  85: 'snow',                         // Snow showers
+  86: 'extreme-snow',                 // Heavy snow showers
+  95: 'thunderstorms',                // Thunderstorm
+  96: 'thunderstorms-rain',           // Thunderstorm with hail
+  99: 'thunderstorms-extreme-rain',   // Thunderstorm heavy hail
 };
+
+// Icons that have day/night variants in Meteocons
+const HAS_DAY_NIGHT = new Set([
+  'clear', 'partly-cloudy', 'overcast', 'fog',
+  'partly-cloudy-day-rain'
+]);
+
+function wmoIcon(code, hour) {
+  const base = WMO_ICONS[code] || 'not-available';
+  const isNight = hour >= 20 || hour < 6;
+
+  if (base === 'partly-cloudy-day-rain') {
+    return ICON_BASE + (isNight ? 'partly-cloudy-night-rain.svg' : 'partly-cloudy-day-rain.svg');
+  }
+  if (HAS_DAY_NIGHT.has(base)) {
+    return ICON_BASE + base + (isNight ? '-night.svg' : '-day.svg');
+  }
+  return ICON_BASE + base + '.svg';
+}
 
 // weeklyWeather[dateStr] = [{icon,temp,mm}, ...] for each WX_HOURS slot
 let weeklyWeather = {};
@@ -761,9 +801,9 @@ async function fetchWeather() {
       const key = dateStr + 'T' + String(h).padStart(2,'0') + ':00';
       const slot = hourly[key] || {};
       return {
-        icon: WMO_ICONS[slot.code] || '🌡️',
-        temp: slot.temp !== undefined ? slot.temp + '°' : '—',
-        mm:   slot.mm !== undefined ? slot.mm + 'mm' : '—'
+        iconUrl: wmoIcon(slot.code, h),
+        temp:    slot.temp !== undefined ? slot.temp + '°' : '—',
+        mm:      slot.mm !== undefined ? slot.mm + 'mm' : '—'
       };
     });
   });
@@ -856,7 +896,7 @@ function renderDayWeather(col, dateStr) {
   inline.innerHTML = slots.map((s, i) =>
     `<div class="wx-slot">` +
     `<span class="wx-slot-time">${WX_LABELS[i]}</span>` +
-    `<span class="wx-slot-icon">${s.icon}</span>` +
+    `<img class="wx-slot-icon" src="${s.iconUrl}" alt="" loading="lazy" onerror="this.style.opacity='0.2'">` +
     `<span class="wx-slot-temp">${s.temp}</span>` +
     `<span class="wx-slot-mm">${s.mm}</span>` +
     `</div>`
