@@ -41,8 +41,11 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      max-width: 1600px;
+      margin: 0 auto;
       padding: 20px 20px 32px;
       gap: 16px;
+      width: 100%;
     }
 
     /* ── Header ── */
@@ -287,9 +290,13 @@
     }
 
     .wx-slot-icon {
-      width: clamp(22px, 3.5vw, 30px);
-      height: clamp(22px, 3.5vw, 30px);
-      object-fit: contain;
+      font-size: clamp(0.85rem, 1.8vw, 1.1rem);
+      line-height: 1.2;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 1.4em;
     }
 
     .wx-slot-temp {
@@ -718,54 +725,39 @@ const WX_TZ  = 'Pacific/Auckland';
 const WX_HOURS = [7, 9, 12, 16, 19];
 const WX_LABELS = ['7am','9am','12pm','4:30','7pm'];
 
-// Meteocons icon names — base used for daytime, -night variants swapped at render
-// Full set: https://basmilius.github.io/weather-icons/index-fill.html
-const ICON_BASE = 'https://basmilius.github.io/weather-icons/production/fill/all/';
-
-const WMO_ICONS = {
-  0:  'clear',                        // Clear sky
-  1:  'partly-cloudy',                // Mainly clear
-  2:  'partly-cloudy',                // Partly cloudy
-  3:  'overcast',                     // Overcast
-  45: 'fog',                          // Fog
-  48: 'fog',                          // Icy fog
-  51: 'drizzle',                      // Light drizzle
-  53: 'drizzle',                      // Drizzle
-  55: 'rain',                         // Heavy drizzle
-  61: 'rain',                         // Light rain
-  63: 'rain',                         // Rain
-  65: 'extreme-rain',                 // Heavy rain
-  71: 'snow',                         // Light snow
-  73: 'snow',                         // Snow
-  75: 'extreme-snow',                 // Heavy snow
-  77: 'snowflake',                    // Snow grains
-  80: 'partly-cloudy-day-rain',       // Showers (always day icon - no night variant)
-  81: 'rain',                         // Heavy showers
-  82: 'extreme-rain',                 // Violent showers
-  85: 'snow',                         // Snow showers
-  86: 'extreme-snow',                 // Heavy snow showers
-  95: 'thunderstorms',                // Thunderstorm
-  96: 'thunderstorms-rain',           // Thunderstorm with hail
-  99: 'thunderstorms-extreme-rain',   // Thunderstorm heavy hail
-};
-
-// Icons that have day/night variants in Meteocons
-const HAS_DAY_NIGHT = new Set([
-  'clear', 'partly-cloudy', 'overcast', 'fog',
-  'partly-cloudy-day-rain'
-]);
-
+// Text symbol weather icons — crisp at any size, no loading required
+// Returns an HTML string with styled Unicode symbols
 function wmoIcon(code, hour) {
-  const base = WMO_ICONS[code] || 'not-available';
   const isNight = hour >= 20 || hour < 6;
-
-  if (base === 'partly-cloudy-day-rain') {
-    return ICON_BASE + (isNight ? 'partly-cloudy-night-rain.svg' : 'partly-cloudy-day-rain.svg');
-  }
-  if (HAS_DAY_NIGHT.has(base)) {
-    return ICON_BASE + base + (isNight ? '-night.svg' : '-day.svg');
-  }
-  return ICON_BASE + base + '.svg';
+  const icons = {
+    0:  isNight ? '<span style="color:#c0cfe8">★</span>'
+                : '<span style="color:#fbbf24;font-size:1.3em">☀</span>',
+    1:  isNight ? '<span style="color:#c0cfe8">☽ <span style="color:#94a3b8;font-size:.8em">☁</span></span>'
+                : '<span style="color:#fbbf24">☀</span><span style="color:#94a3b8;font-size:.8em"> ☁</span>',
+    2:  '<span style="color:#94a3b8">☁</span><span style="color:#94a3b8;font-size:.7em">☁</span>',
+    3:  '<span style="color:#64748b;font-size:1.2em">☁</span>',
+    45: '<span style="color:#94a3b8;font-size:.65em;line-height:1.3;display:block;text-align:center">≡≡<br>≡≡</span>',
+    48: '<span style="color:#94a3b8;font-size:.65em;line-height:1.3;display:block;text-align:center">≡≡<br>≡≡</span>',
+    51: '<span style="color:#93c5fd">·<br style="line-height:.5em">☁</span>',
+    53: '<span style="color:#60a5fa">··<br style="line-height:.5em">☁</span>',
+    55: '<span style="color:#3b82f6">···<br style="line-height:.5em">☁</span>',
+    61: '<span style="color:#93c5fd;font-size:.9em">☁<br style="line-height:.3em">|</span>',
+    63: '<span style="color:#60a5fa;font-size:.9em">☁<br style="line-height:.3em">||</span>',
+    65: '<span style="color:#3b82f6;font-size:.9em">☁<br style="line-height:.3em">|||</span>',
+    71: '<span style="color:#bfdbfe">*</span>',
+    73: '<span style="color:#bfdbfe;font-size:1.1em">❄</span>',
+    75: '<span style="color:#93c5fd;font-size:1.1em">❄❄</span>',
+    77: '<span style="color:#bfdbfe">* *</span>',
+    80: '<span style="color:#60a5fa">☁<br style="line-height:.3em">|·|</span>',
+    81: '<span style="color:#3b82f6">☁<br style="line-height:.3em">|||</span>',
+    82: '<span style="color:#2563eb;font-size:1em">☁<br style="line-height:.3em">↓↓↓</span>',
+    85: '<span style="color:#bfdbfe">☁<br style="line-height:.3em">* *</span>',
+    86: '<span style="color:#93c5fd">☁<br style="line-height:.3em">❄❄</span>',
+    95: '<span style="color:#a78bfa;font-size:1em">⚡</span>',
+    96: '<span style="color:#7c3aed;font-size:1em">⚡☁</span>',
+    99: '<span style="color:#6d28d9;font-size:1em">⚡⚡</span>',
+  };
+  return icons[code] || '<span style="color:#7d8590">?</span>';
 }
 
 // weeklyWeather[dateStr] = [{icon,temp,mm}, ...] for each WX_HOURS slot
@@ -801,9 +793,9 @@ async function fetchWeather() {
       const key = dateStr + 'T' + String(h).padStart(2,'0') + ':00';
       const slot = hourly[key] || {};
       return {
-        iconUrl: wmoIcon(slot.code, h),
-        temp:    slot.temp !== undefined ? slot.temp + '°' : '—',
-        mm:      slot.mm !== undefined ? slot.mm + 'mm' : '—'
+        icon: wmoIcon(slot.code !== undefined ? slot.code : -1, h),
+        temp: slot.temp !== undefined ? slot.temp + '°' : '—',
+        mm:   slot.mm !== undefined ? slot.mm + 'mm' : '—'
       };
     });
   });
@@ -896,7 +888,7 @@ function renderDayWeather(col, dateStr) {
   inline.innerHTML = slots.map((s, i) =>
     `<div class="wx-slot">` +
     `<span class="wx-slot-time">${WX_LABELS[i]}</span>` +
-    `<img class="wx-slot-icon" src="${s.iconUrl}" alt="" loading="lazy" onerror="this.style.opacity='0.2'">` +
+    `<span class="wx-slot-icon">${s.icon}</span>` +
     `<span class="wx-slot-temp">${s.temp}</span>` +
     `<span class="wx-slot-mm">${s.mm}</span>` +
     `</div>`
