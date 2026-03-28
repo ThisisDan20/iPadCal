@@ -369,30 +369,47 @@
 
     /* ── Responsive breakpoints ── */
 
-    /* Large tablet landscape / small desktop: 5 columns */
-    @media (max-width: 1100px) {
+    /* Medium desktop */
+    @media (max-width: 1200px) {
       #days { grid-template-columns: repeat(5, 1fr); }
     }
 
-    /* Tablet portrait (iPad Air portrait ~820px): 4 columns */
-    @media (max-width: 860px) {
-      #app { padding: 16px 16px 28px; }
+    /* Tablet landscape */
+    @media (max-width: 1024px) {
       #days { grid-template-columns: repeat(4, 1fr); }
       .sun-divider { display: none; }
     }
 
-    /* Large phone landscape / small tablet: 3 columns */
+    /* Tablet portrait — iPad Air portrait ~768px: 3 columns, bigger everything */
+    @media (max-width: 860px) {
+      html, body { overflow-y: auto; height: auto; }
+      #app { padding: 16px 14px 32px; gap: 14px; min-height: 100dvh; }
+      #days { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .sun-divider { display: none; }
+      #clock { font-size: clamp(3rem, 8vw, 5rem); }
+      #date-label { font-size: clamp(1.1rem, 2.5vw, 1.4rem); }
+      .legend-item { font-size: clamp(0.95rem, 2vw, 1.1rem); }
+      .day-num { font-size: clamp(2.4rem, 6vw, 3.4rem); }
+      .day-name { font-size: clamp(0.9rem, 2vw, 1.1rem); }
+      .event { font-size: clamp(1rem, 2.2vw, 1.3rem); padding: 9px 12px; }
+      .event-time { font-size: clamp(0.85rem, 1.8vw, 1rem); }
+      .no-events { font-size: clamp(0.95rem, 2vw, 1.1rem); }
+      .wx-slot-time { font-size: clamp(0.65rem, 1.4vw, 0.8rem); }
+      .wx-slot-icon { font-size: clamp(1rem, 2.2vw, 1.3rem); }
+      .wx-slot-temp { font-size: clamp(0.78rem, 1.7vw, 0.95rem); }
+      .wx-slot-mm   { font-size: clamp(0.65rem, 1.4vw, 0.78rem); }
+    }
+
+    /* Large phone landscape: 3 columns */
     @media (max-width: 640px) {
       #app { padding: 12px 12px 24px; gap: 12px; }
       #days { grid-template-columns: repeat(3, 1fr); gap: 8px; }
       header { padding-bottom: 12px; }
-
     }
 
-    /* Phone portrait: 1 column, full width, scrollable */
+    /* Phone portrait: 1 column, scrollable */
     @media (max-width: 480px) {
-      html, body { overflow-y: auto; height: auto; }
-      #app { padding: 12px 10px 32px; gap: 10px; min-height: 100dvh; }
+      #app { padding: 12px 10px 32px; gap: 10px; }
       #days { grid-template-columns: 1fr; gap: 8px; }
       .day-col { padding: 14px 12px; }
       #clock { font-size: clamp(2.4rem, 12vw, 3.2rem); }
