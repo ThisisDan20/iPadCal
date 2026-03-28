@@ -434,64 +434,6 @@
       header { padding-bottom: 12px; }
     }
 
-    /* ── Bin widget ── */
-    #bin-widget {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 18px;
-      flex-wrap: wrap;
-    }
-
-    .bin-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: clamp(0.85rem, 1.8vw, 1rem);
-    }
-
-    .bin-icon {
-      font-size: clamp(1.4rem, 3vw, 1.8rem);
-      line-height: 1;
-    }
-
-    .bin-detail {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-    }
-
-    .bin-label {
-      font-size: clamp(0.58rem, 1.3vw, 0.68rem);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-    }
-
-    .bin-value {
-      font-family: 'DM Mono', monospace;
-      font-size: clamp(0.85rem, 1.8vw, 1rem);
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .bin-value.bin-today {
-      color: #f59e0b;
-    }
-
-    .bin-value.bin-tomorrow {
-      color: #60a5fa;
-    }
-
-    .bin-divider {
-      width: 1px;
-      height: 28px;
-      background: var(--border);
-      flex-shrink: 0;
-    }
 
     /* Phone portrait: 1 column, scrollable */
     @media (max-width: 480px) {
@@ -523,7 +465,6 @@
       <div class="legend" id="legend"></div>
     </div>
   </header>
-  <div id="bin-widget">Loading bins…</div>
   <div id="days"></div>
 </div>
 <div id="status">Initialising...</div>
@@ -787,7 +728,7 @@ function renderEvents(allEvents, cols) {
       div.className = 'event';
       // Use solid colour block; light colours (ivory/white) get dark text
       // cal3 (Zahra ivory) and cal4 (grey) need dark text
-      const isLight = ev.color === 'var(--cal3)';
+      const isLight = ev.color === 'var(--cal3)' || ev.isBin;
       div.style.background = ev.color;
       div.style.borderLeft = 'none';
       div.style.color = isLight ? '#1a1a2e' : '#ffffff';
@@ -1086,7 +1027,7 @@ async function load(background = false) {
   const cols = buildDayColumns();
 
   if (cachedCal) {
-    renderEvents(cachedCal, cols);
+    renderEvents([...cachedCal, ...getBinEvents()], cols);
   }
 
   if (cachedWx) {
@@ -1105,7 +1046,7 @@ async function load(background = false) {
     // Weather is ready — rebuild columns and render weather immediately
     // so the strips appear before slow calendar fetches finish
     freshCols = buildDayColumns();
-    if (cachedCal) renderEvents(cachedCal, freshCols); // keep cached events visible
+    if (cachedCal) renderEvents([...cachedCal, ...getBinEvents()], freshCols); // keep cached events visible
     freshCols.forEach(({ el, date }) => renderDayWeather(el, localDateStr(date)));
     saveWxCache();
   } catch(e) {
@@ -1131,7 +1072,8 @@ async function load(background = false) {
 
   // Final render with fresh everything
   const finalCols = buildDayColumns();
-  renderEvents(allEvents, finalCols);
+  const allEventsWithBins = [...allEvents, ...getBinEvents()];
+  renderEvents(allEventsWithBins, finalCols);
   finalCols.forEach(({ el, date }) => renderDayWeather(el, localDateStr(date)));
   saveCache(allEvents);
 
@@ -1143,86 +1085,46 @@ async function load(background = false) {
 }
 
 // ─────────────────────────────────────────────
-//  Bin collection widget — Glen Eden, Auckland
+//  Bin collection — Glen Eden, Auckland
 //  Rubbish + food scraps: every Monday
 //  Recycling: fortnightly Monday
-//  Known recycling week: 24 March 2026 (week A)
+//  Known recycling week: 23 March 2026
 // ─────────────────────────────────────────────
 const BIN_DAY        = 1; // Monday
 const RECYCLING_SEED = new Date(2026, 2, 23); // 23 March 2026 = recycling week
 
-function getNextBinDays() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Find next Monday (or today if Monday)
-  function nextMonday(from, offset = 0) {
-    const d = new Date(from);
-    const daysUntil = (BIN_DAY - d.getDay() + 7 + offset) % 7;
-    d.setDate(d.getDate() + daysUntil);
-    return d;
-  }
-
-  // Is a given Monday a recycling week?
-  function isRecyclingWeek(monday) {
-    const diffMs   = monday - RECYCLING_SEED;
-    const diffDays = Math.round(diffMs / 86400000);
-    return (diffDays / 7) % 2 === 0;
-  }
-
-  // Find the next 2 Mondays
-  const day = today.getDay();
-  const thisMonday = nextMonday(today, day === BIN_DAY ? 0 : undefined);
-  const nextMon    = new Date(thisMonday);
-  nextMon.setDate(nextMon.getDate() + 7);
-
-  return {
-    thisMonday,
-    nextMonday: nextMon,
-    thisRecycling: isRecyclingWeek(thisMonday),
-    nextRecycling: isRecyclingWeek(nextMon),
-  };
+function isRecyclingWeek(monday) {
+  const diffDays = Math.round((monday - RECYCLING_SEED) / 86400000);
+  return (diffDays / 7) % 2 === 0;
 }
 
-function renderBins() {
-  const { thisMonday, nextMonday, thisRecycling, nextRecycling } = getNextBinDays();
-  const today    = new Date(); today.setHours(0,0,0,0);
-  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+// Returns synthetic bin events for any Mondays in the 7-day window
+function getBinEvents() {
+  const events = [];
+  const today  = new Date(); today.setHours(0, 0, 0, 0);
 
-  function dayLabel(d) {
-    if (d.getTime() === today.getTime())    return { text: 'Today!',    cls: 'bin-today' };
-    if (d.getTime() === tomorrow.getTime()) return { text: 'Tomorrow',  cls: 'bin-tomorrow' };
-    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    const dd   = String(d.getDate()).padStart(2,'0');
-    const mm   = String(d.getMonth()+1).padStart(2,'0');
-    return { text: days[d.getDay()] + ' ' + dd + '/' + mm, cls: '' };
+  for (let i = 0; i < DAYS_TO_SHOW; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() + i);
+    if (d.getDay() !== BIN_DAY) continue;
+
+    const recycling = isRecyclingWeek(d);
+    const start = new Date(d); start.setHours(6, 30, 0, 0);
+    const end   = new Date(d); end.setHours(7, 0, 0, 0);
+
+    events.push({
+      title:  recycling ? '🗑️ Rubbish + ♻️ Recycling' : '🗑️ Rubbish + 🥦 Food scraps',
+      start, end,
+      allDay: false,
+      color:  recycling ? '#6ee7b7' : '#fcd34d',
+      cal:    'bins',
+      isBin:  true
+    });
   }
-
-  const thisLabel = dayLabel(thisMonday);
-  const nextLabel = dayLabel(nextMonday);
-
-  const el = document.getElementById('bin-widget');
-  el.innerHTML =
-    // This Monday
-    `<div class="bin-item">
-      <span class="bin-icon">🗑️</span>
-      <div class="bin-detail">
-        <span class="bin-label">${thisRecycling ? '🗑️ Rubbish + ♻️ Recycling' : '🗑️ Rubbish + 🥦 Food scraps'}</span>
-        <span class="bin-value ${thisLabel.cls}">${thisLabel.text}</span>
-      </div>
-    </div>
-    <div class="bin-divider"></div>
-    <div class="bin-item">
-      <span class="bin-icon">🗑️</span>
-      <div class="bin-detail">
-        <span class="bin-label">${nextRecycling ? '🗑️ Rubbish + ♻️ Recycling' : '🗑️ Rubbish + 🥦 Food scraps'}</span>
-        <span class="bin-value ${nextLabel.cls}">${nextLabel.text}</span>
-      </div>
-    </div>`;
+  return events;
 }
 
 buildLegend();
-renderBins();
 load(false);
 
 // Background refresh — rebuilds silently
