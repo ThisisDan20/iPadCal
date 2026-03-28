@@ -51,6 +51,8 @@
       padding: 20px 20px 32px;
       gap: 16px;
       width: 100%;
+      box-sizing: border-box;
+      overflow-x: hidden;
     }
 
     /* ── Header: two rows ── */
@@ -232,7 +234,9 @@
       gap: 10px;
       align-items: start;
       /* Default: 7 columns for wide screens */
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      min-width: 0;
+      overflow: hidden;
     }
 
     .day-col {
@@ -243,6 +247,8 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .day-col.is-today {
@@ -409,8 +415,8 @@
     /* Tablet portrait — iPad Air portrait ~768px: 3 columns, bigger everything */
     @media (max-width: 860px) {
       html, body { overflow-y: auto; height: auto; }
-      #app { padding: 14px 14px 32px; gap: 12px; min-height: 100dvh; }
-      #days { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      #app { padding: 10px 10px 32px; gap: 10px; min-height: 100dvh; }
+      #days { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
       .sun-divider { display: none; }
       .sun-row { gap: 10px; }
       #clock { font-size: clamp(3rem, 8vw, 5rem); }
@@ -481,7 +487,7 @@ const CALENDARS = [
   },
   {
     name: "Marcia 👹",
-    url:  "webcal://p185-caldav.icloud.com/published/2/MTE5OTExNDY4NzExOTkxMTfXDGIyUsTZxA8rvg7A83ip9vb0u2D2bJY6my_feCmTaXv2ssCAGrcoLEa7nxPGqcSlbhXfFIibuiXva-TNLMQ",
+    url:  "webcal://p185-caldav.icloud.com/published/2/MTE5OTExNDY4NzExOTkxMTfXDGIyUsTZxA8rvg7A83jlwl9UzKbtPpg_MCEX4YO0",
     color: "var(--cal2)"
   },
   {
@@ -1088,10 +1094,37 @@ async function load(background = false) {
 //  Bin collection — Glen Eden, Auckland
 //  Rubbish + food scraps: every Monday
 //  Recycling: fortnightly Monday
+//  If Monday is a public holiday → shifted to Tuesday
 //  Known recycling week: 23 March 2026
 // ─────────────────────────────────────────────
 const BIN_DAY        = 1; // Monday
 const RECYCLING_SEED = new Date(2026, 2, 23); // 23 March 2026 = recycling week
+
+// Auckland public holidays that fall on a Monday (bin day shifts to Tuesday)
+const MONDAY_HOLIDAYS = new Set([
+  // 2025
+  '2025-01-27', // Auckland Anniversary
+  '2025-02-10', // Waitangi Day observed
+  '2025-04-21', // Easter Monday
+  '2025-04-28', // Anzac Day observed
+  '2025-06-02', // King's Birthday
+  '2025-10-27', // Labour Day
+  // 2026
+  '2026-01-26', // Auckland Anniversary
+  '2026-04-06', // Easter Monday
+  '2026-04-27', // Anzac Day observed
+  '2026-06-01', // King's Birthday
+  '2026-10-26', // Labour Day
+  '2026-12-28', // Boxing Day observed
+  // 2027
+  '2027-02-01', // Auckland Anniversary
+  '2027-02-08', // Waitangi Day observed
+  '2027-03-29', // Easter Monday
+  '2027-04-26', // Anzac Day observed
+  '2027-06-07', // King\'s Birthday
+  '2027-10-25', // Labour Day
+  '2027-12-27', // Christmas observed
+]);
 
 function isRecyclingWeek(monday) {
   const diffDays = Math.round((monday - RECYCLING_SEED) / 86400000);
@@ -1108,9 +1141,16 @@ function getBinEvents() {
     d.setDate(d.getDate() + i);
     if (d.getDay() !== BIN_DAY) continue;
 
-    const recycling = isRecyclingWeek(d);
-    const start = new Date(d); start.setHours(6, 30, 0, 0);
-    const end   = new Date(d); end.setHours(7, 0, 0, 0);
+    const recycling  = isRecyclingWeek(d);
+    const dateStr    = localDateStr(d);
+    const isHoliday  = MONDAY_HOLIDAYS.has(dateStr);
+
+    // If Monday is a holiday, collection shifts to Tuesday
+    const collectionDate = new Date(d);
+    if (isHoliday) collectionDate.setDate(collectionDate.getDate() + 1);
+
+    const start = new Date(collectionDate); start.setHours(6, 30, 0, 0);
+    const end   = new Date(collectionDate); end.setHours(7, 0, 0, 0);
 
     events.push({
       title:  recycling ? '🗑️ Rubbish + ♻️ Recycling' : '🗑️ Rubbish + 🥦 Food scraps',
@@ -1129,6 +1169,9 @@ load(false);
 
 // Background refresh — rebuilds silently
 setInterval(() => load(true), REFRESH_MINS * 60 * 1000);
+
+// Full page reload every 12 hours to clear memory on old iPad
+setInterval(() => location.reload(), 12 * 60 * 60 * 1000);
 </script>
 </body>
 </html>
