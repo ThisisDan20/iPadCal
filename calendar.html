@@ -233,8 +233,8 @@
       display: grid;
       gap: 10px;
       align-items: start;
-      /* Default: 7 columns for wide screens */
-      grid-template-columns: repeat(7, minmax(0, 1fr));
+      /* Auto-fill: as many columns as fit at min 180px, stretch to fill */
+      grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
       min-width: 0;
       overflow: hidden;
     }
@@ -401,14 +401,8 @@
 
     /* ── Responsive breakpoints ── */
 
-    /* Medium desktop */
-    @media (max-width: 1200px) {
-      #days { grid-template-columns: repeat(5, 1fr); }
-    }
-
-    /* Tablet landscape */
+    /* Tablet landscape — hide sun dividers */
     @media (max-width: 1024px) {
-      #days { grid-template-columns: repeat(4, 1fr); }
       .sun-divider { display: none; }
     }
 
