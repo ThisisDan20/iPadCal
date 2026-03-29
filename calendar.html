@@ -198,9 +198,12 @@
       overflow: hidden;
     }
 
-    /* Today — same dark card, highlighted by cream name+number + left accent */
+    /* Today — light cream card, cream left accent */
     .day-col.is-today {
-      border-left: 3px solid var(--text);
+      background: #e8e4dc;
+      border-color: #d8d4cc;
+      border-left: 3px solid #1a1a1a;
+      color: #1a1a1a;
     }
 
     /* Day head — name + number inline, same size */
@@ -227,7 +230,7 @@
       color: var(--muted);
     }
 
-    .day-col.is-today .day-name { color: var(--text); }
+    .day-col.is-today .day-name { color: #888; }
 
     .day-num {
       font-size: clamp(1.6rem, 3.5vw, 2.4rem);
@@ -237,7 +240,7 @@
       color: var(--text);
     }
 
-    .day-col.is-today .day-num { color: var(--text); }
+    .day-col.is-today .day-num  { color: #1a1a1a; }
 
     /* Weather inline */
     .wx-inline {
@@ -250,6 +253,16 @@
       overflow: hidden;
       margin-top: 6px;
     }
+
+    .day-col.is-today .wx-inline {
+      background: #ccc8c0;
+      border-color: #b8b4ac;
+    }
+    .day-col.is-today .wx-slot { border-right-color: #b8b4ac; }
+    .day-col.is-today .wx-slot-time { color: #777; }
+    .day-col.is-today .wx-slot-temp { color: #222; }
+    .day-col.is-today .wx-slot-mm   { color: #2060a0; }
+    .day-col.is-today .no-events    { color: #aaa; }
 
     .wx-slot {
       display: grid;
@@ -389,8 +402,8 @@
     </div>
     <div class="header-right">
       <div id="sun-bar">
-        <div class="sun-row" id="sun-moon-row">Loading…</div>
-        <div class="sun-row" id="sun-rise-row"></div>
+        <div class="sun-row" id="sun-rise-row">Loading…</div>
+        <div class="sun-row" id="sun-moon-row"></div>
       </div>
       <div class="legend" id="legend"></div>
     </div>
@@ -702,6 +715,17 @@ function renderEvents(allEvents, cols) {
             div.style.textDecoration = 'line-through';
           }
         });
+      }
+
+      // Fade past events
+      if (!ev.allDay && ev.end) {
+        const now = new Date();
+        if (ev.end < now) {
+          div.style.opacity = '0.35';
+        } else if (ev.start < now && ev.end > now) {
+          // In progress — subtle fade
+          div.style.opacity = '0.7';
+        }
       }
 
       // Time + duration string
