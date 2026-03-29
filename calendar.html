@@ -11,7 +11,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <title>Family Calendar</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <script>/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -20,16 +20,25 @@
 </script>
   <style>
     :root {
-      --bg:       #0d1117;
-      --surface:  #161b22;
-      --border:   #21262d;
-      --text:     #e6edf3;
-      --muted:    #7d8590;
-      --cal1:     #4caf7d;
-      --cal2:     #58a6ff;
-      --cal3:     #f0ead6;
-      --cal4:     #888888;
-      --today-bg: #1a2332;
+      --bg:        #0a0a0a;
+      --surface:   #131313;
+      --border:    #1e1e1e;
+      --border2:   #252525;
+      --text:      #e8e4dc;
+      --muted:     #666666;
+      --top-rule:  #e8e4dc;
+      --cal1:      #4caf7d;
+      --cal1-bg:   #1a3d2a;
+      --cal2:      #58a6ff;
+      --cal2-bg:   #0e2a4a;
+      --cal3:      #f0ead6;
+      --cal3-text: #2a2010;
+      --cal3-border: #c8a878;
+      --cal4:      #888888;
+      --cal4-bg:   #1e1e1e;
+      --bin-bg:    #fcd34d;
+      --bin-text:  #1a1200;
+      --bin-border:#f59e0b;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -55,46 +64,45 @@
       overflow-x: hidden;
     }
 
-    /* ── Header: two rows ── */
+    /* ── Header ── */
     header {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border2);
       padding-bottom: 14px;
+      border-top: 3px solid var(--top-rule);
+      padding-top: 16px;
     }
 
-    /* Top row: clock + sun/moon info */
     .header-top {
       display: flex;
       align-items: center;
       gap: 20px;
     }
 
-    .header-left {
-      display: flex;
-      flex-direction: column;
-      flex-shrink: 0;
-    }
+    .header-left { display: flex; flex-direction: column; flex-shrink: 0; }
 
     #clock {
-      font-family: 'DM Mono', monospace;
+      font-family: 'Inter', sans-serif;
       font-size: clamp(2.8rem, 8vw, 5rem);
-      font-weight: 400;
-      letter-spacing: -2px;
+      font-weight: 900;
+      letter-spacing: -4px;
       line-height: 1;
       color: var(--text);
     }
 
     #date-label {
-      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      font-size: clamp(0.7rem, 2vw, 0.85rem);
       color: var(--muted);
-      font-weight: 400;
-      margin-top: 4px;
-      letter-spacing: 0.02em;
+      font-weight: 500;
+      margin-top: 6px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-family: 'Roboto', sans-serif;
     }
 
-    /* Sun/moon: two rows, sits right of clock */
+    /* Sun/moon bar */
     #sun-bar {
       display: flex;
       flex-direction: column;
@@ -111,129 +119,64 @@
       overflow: hidden;
     }
 
-    /* Bottom row: legend */
-    .header-bottom {
-      display: flex;
-      align-items: center;
-    }
+    .header-bottom { display: flex; align-items: center; }
 
+    /* Legend */
     .legend {
       display: flex;
       flex-wrap: wrap;
       gap: 12px 20px;
       align-items: center;
-      padding-bottom: 4px;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: clamp(0.9rem, 2vw, 1rem);
+      font-size: clamp(0.58rem, 1.4vw, 0.7rem);
       color: var(--muted);
-      font-weight: 500;
-      letter-spacing: 0.04em;
+      font-weight: 600;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
     }
 
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-    .sun-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .sun-icon {
-      font-size: clamp(1.4rem, 3vw, 1.8rem);
-      line-height: 1;
-    }
-
-    .sun-detail {
-      display: flex;
-      flex-direction: column;
-      gap: 1px;
-    }
-
+    /* Sun/moon items */
+    .sun-item { display: flex; align-items: center; gap: 8px; }
+    .sun-icon { font-size: clamp(1.2rem, 2.5vw, 1.5rem); line-height: 1; }
+    .sun-detail { display: flex; flex-direction: column; gap: 1px; }
     .sun-label {
-      font-size: clamp(0.6rem, 1.4vw, 0.7rem);
+      font-size: clamp(0.58rem, 1.3vw, 0.68rem);
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--muted);
+      font-family: 'Roboto', sans-serif;
+      font-weight: 400;
     }
-
     .sun-value {
-      font-family: 'DM Mono', monospace;
-      font-size: clamp(0.9rem, 2vw, 1.1rem);
+      font-family: 'Roboto', sans-serif;
+      font-size: clamp(0.85rem, 1.8vw, 1rem);
       color: var(--text);
       font-weight: 500;
     }
+    .sun-divider { width: 1px; height: 28px; background: var(--border2); flex-shrink: 0; }
 
-    .sun-divider {
-      width: 1px;
-      height: 28px;
-      background: var(--border);
-      flex-shrink: 0;
-    }
-
+    /* Moon chart */
     .moon-chart {
-      flex: 1;
-      min-width: 160px;
-      height: 32px;
-      position: relative;
-      display: flex;
-      align-items: center;
+      flex: 1; min-width: 160px; height: 32px;
+      position: relative; display: flex; align-items: center;
     }
-
-    .moon-track {
-      position: absolute;
-      left: 0; right: 0;
-      height: 2px;
-      background: var(--border);
-      border-radius: 2px;
-    }
-
-    .moon-fill {
-      position: absolute;
-      left: 0;
-      height: 2px;
-      background: linear-gradient(to right, #7d8590, #e6edf3);
-      border-radius: 2px;
-    }
-
-    .moon-marker {
-      position: absolute;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 1.3rem;
-      line-height: 1;
-      filter: drop-shadow(0 0 4px rgba(230,237,243,0.3));
-    }
-
-    .moon-phase-label {
-      position: absolute;
-      bottom: -2px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 0.6rem;
-      color: var(--muted);
-      white-space: nowrap;
-      letter-spacing: 0.04em;
-    }
-
-
+    .moon-track { position: absolute; left: 0; right: 0; height: 2px; background: var(--border2); border-radius: 2px; }
+    .moon-fill  { position: absolute; left: 0; height: 2px; background: linear-gradient(to right, #444, var(--text)); border-radius: 2px; }
+    .moon-marker { position: absolute; top: 50%; transform: translate(-50%,-50%); font-size: 1.2rem; line-height: 1; }
+    .moon-phase-label { position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); font-size: 0.6rem; color: var(--muted); white-space: nowrap; letter-spacing: 0.04em; font-family: 'Roboto', sans-serif; }
 
     /* ── Days grid ── */
     #days {
       display: grid;
       gap: 10px;
       align-items: start;
-      /* Auto-fill: as many columns as fit at min 180px, stretch to fill */
       grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
       min-width: 0;
       overflow: hidden;
@@ -241,7 +184,7 @@
 
     .day-col {
       background: var(--surface);
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid var(--border);
       padding: 16px 14px;
       display: flex;
@@ -251,57 +194,57 @@
       overflow: hidden;
     }
 
+    /* Today — same dark card, highlighted by cream name+number + left accent */
     .day-col.is-today {
-      background: var(--today-bg);
-      border-color: #2d4a6e;
+      border-left: 3px solid var(--text);
     }
 
+    /* Day head — name + number inline, same size */
     .day-head {
       display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
+      flex-direction: column;
+      gap: 0;
       padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border2);
     }
 
     .day-head-left {
       display: flex;
-      flex-direction: column;
-      gap: 2px;
-      flex-shrink: 0;
+      align-items: baseline;
+      gap: 8px;
     }
 
     .day-name {
-      font-size: clamp(0.75rem, 1.6vw, 0.95rem);
-      font-weight: 600;
-      letter-spacing: 0.1em;
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -1px;
       text-transform: uppercase;
       color: var(--muted);
     }
 
-    .day-col.is-today .day-name { color: var(--cal1); }
+    .day-col.is-today .day-name { color: var(--text); }
 
     .day-num {
-      font-size: clamp(1.6rem, 3.5vw, 2.6rem);
-      font-weight: 300;
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 900;
       line-height: 1;
+      letter-spacing: -2px;
       color: var(--text);
     }
 
-    .day-col.is-today .day-num { color: var(--cal1); }
+    .day-col.is-today .day-num { color: var(--text); }
 
-    /* Weather inline with day head */
+    /* Weather inline */
     .wx-inline {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       flex: 1;
-      gap: 0;
       background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       overflow: hidden;
+      margin-top: 6px;
     }
 
     .wx-slot {
@@ -312,16 +255,14 @@
       padding: 6px 2px;
       border-right: 1px solid var(--border);
     }
-
     .wx-slot:last-child { border-right: none; }
 
     .wx-slot-time {
-      font-family: 'DM Mono', monospace;
+      font-family: 'Roboto', sans-serif;
       font-size: clamp(0.52rem, 1.1vw, 0.65rem);
       color: var(--muted);
-      align-self: center;
+      font-weight: 400;
     }
-
     .wx-slot-icon {
       font-size: clamp(0.85rem, 1.8vw, 1.1rem);
       line-height: 1.2;
@@ -332,51 +273,52 @@
       width: 100%;
       overflow: hidden;
     }
-
     .wx-slot-temp {
-      font-family: 'DM Mono', monospace;
+      font-family: 'Roboto', sans-serif;
       font-size: clamp(0.62rem, 1.3vw, 0.78rem);
       font-weight: 500;
       color: var(--text);
-      align-self: center;
     }
-
     .wx-slot-mm {
-      font-family: 'DM Mono', monospace;
+      font-family: 'Roboto', sans-serif;
       font-size: clamp(0.52rem, 1.1vw, 0.62rem);
-      color: #58a6ff;
-      align-self: center;
+      color: #4080c0;
+      font-weight: 300;
     }
 
+    /* ── Events ── */
     .events {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
     }
 
     .event {
-      border-radius: 7px;
-      padding: 8px 10px;
-      font-size: clamp(0.9rem, 2vw, 1.1rem);
+      border-radius: 6px;
+      padding: 6px 9px;
+      font-size: clamp(0.82rem, 1.8vw, 1rem);
       font-weight: 500;
-      line-height: 1.35;
+      line-height: 1.3;
       word-break: break-word;
+      border-left: 3px solid;
+      color: #ffffff;
     }
 
     .event-time {
-      font-family: 'DM Mono', monospace;
-      font-size: clamp(0.78rem, 1.6vw, 0.92rem);
-      opacity: 0.85;
+      font-family: 'Roboto', sans-serif;
+      font-size: clamp(0.62rem, 1.3vw, 0.75rem);
+      font-weight: 300;
+      opacity: 0.7;
       display: block;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
       color: inherit;
     }
 
     .event-title { display: block; }
 
     .no-events {
-      font-size: clamp(0.85rem, 1.8vw, 1rem);
-      color: var(--border);
+      font-size: clamp(0.75rem, 1.6vw, 0.9rem);
+      color: var(--border2);
       font-style: italic;
     }
 
@@ -385,28 +327,17 @@
       position: fixed;
       bottom: 8px;
       right: 12px;
-      font-size: 0.7rem;
-      color: var(--border);
-      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--border2);
+      font-family: 'Roboto', sans-serif;
+      font-weight: 300;
     }
 
-    .error-msg {
-      background: #2d1b1b;
-      border: 1px solid #5a2020;
-      border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 0.8rem;
-      color: #f78166;
-    }
-
-    /* ── Responsive breakpoints ── */
-
-    /* Tablet landscape — hide sun dividers */
+    /* ── Responsive ── */
     @media (max-width: 1024px) {
       .sun-divider { display: none; }
     }
 
-    /* Tablet portrait — iPad Air portrait ~768px: 3 columns, bigger everything */
     @media (max-width: 860px) {
       html, body { overflow-y: auto; height: auto; }
       #app { padding: 10px 10px 32px; gap: 10px; min-height: 100dvh; }
@@ -416,26 +347,23 @@
       #clock { font-size: clamp(3rem, 8vw, 5rem); }
       #date-label { font-size: clamp(1.1rem, 2.5vw, 1.4rem); }
       .legend-item { font-size: clamp(0.95rem, 2vw, 1.1rem); }
-      .day-num { font-size: clamp(2.4rem, 6vw, 3.4rem); }
-      .day-name { font-size: clamp(0.9rem, 2vw, 1.1rem); }
-      .event { font-size: clamp(1rem, 2.2vw, 1.3rem); padding: 9px 12px; }
-      .event-time { font-size: clamp(0.85rem, 1.8vw, 1rem); }
-      .no-events { font-size: clamp(0.95rem, 2vw, 1.1rem); }
-      .wx-slot-time { font-size: clamp(0.65rem, 1.4vw, 0.8rem); }
+      .day-num { font-size: clamp(2rem, 5vw, 2.8rem); }
+      .day-name { font-size: clamp(2rem, 5vw, 2.8rem); }
+      .event { font-size: clamp(1rem, 2.2vw, 1.25rem); padding: 8px 10px; }
+      .event-time { font-size: clamp(0.82rem, 1.8vw, 0.95rem); }
+      .no-events { font-size: clamp(0.9rem, 2vw, 1.05rem); }
+      .wx-slot-time { font-size: clamp(0.62rem, 1.4vw, 0.78rem); }
       .wx-slot-icon { font-size: clamp(1rem, 2.2vw, 1.3rem); }
-      .wx-slot-temp { font-size: clamp(0.78rem, 1.7vw, 0.95rem); }
-      .wx-slot-mm   { font-size: clamp(0.65rem, 1.4vw, 0.78rem); }
+      .wx-slot-temp { font-size: clamp(0.75rem, 1.7vw, 0.92rem); }
+      .wx-slot-mm   { font-size: clamp(0.62rem, 1.4vw, 0.75rem); }
     }
 
-    /* Large phone landscape: 3 columns */
     @media (max-width: 640px) {
       #app { padding: 12px 12px 24px; gap: 12px; }
-      #days { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      #days { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
       header { padding-bottom: 12px; }
     }
 
-
-    /* Phone portrait: 1 column, scrollable */
     @media (max-width: 480px) {
       #app { padding: 12px 10px 32px; gap: 10px; }
       #days { grid-template-columns: 1fr; gap: 8px; }
@@ -692,8 +620,8 @@ function buildDayColumns() {
           <div class="day-name">${names[d.getDay()]}</div>
           <div class="day-num">${d.getDate()}</div>
         </div>
-        <div class="wx-inline" id="wx-${localDateStr(d)}"></div>
        </div>
+       <div class="wx-inline" id="wx-${localDateStr(d)}"></div>
        <div class="events"></div>`;
 
     container.appendChild(col);
@@ -726,13 +654,55 @@ function renderEvents(allEvents, cols) {
     dayEvents.forEach(ev => {
       const div = document.createElement('div');
       div.className = 'event';
-      // Use solid colour block; light colours (ivory/white) get dark text
-      // cal3 (Zahra ivory) and cal4 (grey) need dark text
-      const isLight = ev.color === 'var(--cal3)' || ev.isBin;
-      div.style.background = ev.color;
-      div.style.borderLeft = 'none';
-      div.style.color = isLight ? '#1a1a2e' : '#ffffff';
 
+      // Colour map: dark bg + accent left border + text colour
+      const C = ev.color;
+      if (ev.isBin) {
+        div.style.background   = '#fcd34d';
+        div.style.borderColor  = '#f59e0b';
+        div.style.color        = '#1a1200';
+      } else if (C === 'var(--cal1)') {
+        div.style.background   = '#1a3d2a';
+        div.style.borderColor  = '#4caf7d';
+        div.style.color        = '#ffffff';
+      } else if (C === 'var(--cal2)') {
+        div.style.background   = '#0e2a4a';
+        div.style.borderColor  = '#58a6ff';
+        div.style.color        = '#ffffff';
+      } else if (C === 'var(--cal3)') {
+        div.style.background   = '#f0ead6';
+        div.style.borderColor  = '#c8a878';
+        div.style.color        = '#2a2010';
+      } else {
+        // cal4 / NZ holidays / fallback
+        div.style.background   = '#1e1e1e';
+        div.style.borderColor  = '#555555';
+        div.style.color        = '#aaaaaa';
+      }
+
+      if (ev.isBin) {
+        div.style.cursor = 'pointer';
+        div.style.userSelect = 'none';
+        const binKey = 'bin_done_' + ev.start.toDateString();
+        if (localStorage.getItem(binKey)) {
+          div.style.opacity = '0.5';
+          div.style.textDecoration = 'line-through';
+        }
+        div.addEventListener('click', function() {
+          const done = localStorage.getItem(binKey);
+          if (done) {
+            localStorage.removeItem(binKey);
+            div.style.opacity = '';
+            div.style.textDecoration = '';
+          } else {
+            localStorage.setItem(binKey, '1');
+            div.style.opacity = '0.5';
+            div.style.textDecoration = 'line-through';
+          }
+        });
+      }
+
+      // Time + duration string
       let timeStr = '';
       if (!ev.allDay) {
         const h = ev.start.getHours();
@@ -752,7 +722,7 @@ function renderEvents(allEvents, cols) {
                     ? (diffMins/60) + 'h'
                     : Math.floor(diffMins/60) + 'h' + (diffMins%60) + 'm')
                 : diffMins + 'm';
-              t = startStr + ' – ' + endStr + ' <span style="opacity:0.6">(' + durStr + ')</span>';
+              t = startStr + ' – ' + endStr + ' (' + durStr + ')';
             }
           }
           timeStr = `<span class="event-time">${t}</span>`;
