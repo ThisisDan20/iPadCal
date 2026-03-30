@@ -1237,7 +1237,7 @@ function getBinEvents() {
     const end   = new Date(collectionDate); end.setHours(7, 0, 0, 0);
 
     events.push({
-      title:  recycling ? '🗑️ Rubbish + ♻️ Recycling' : '🗑️ Rubbish + 🥦 Food scraps',
+      title:  recycling ? '🗑️ Rubbish + ♻️ Recycling + 🥦 Food scraps' : '🗑️ Rubbish + 🥦 Food scraps',
       start, end,
       allDay: false,
       color:  recycling ? '#6ee7b7' : '#fcd34d',
