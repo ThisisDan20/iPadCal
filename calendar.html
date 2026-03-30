@@ -241,7 +241,7 @@
       color: var(--muted);
     }
 
-    .day-col.is-today .day-name { color: #3a3a3a; }
+    .day-col.is-today .day-name { color: #2a2a2a; }
 
     .day-num {
       font-size: clamp(1.6rem, 3.5vw, 2.4rem);
@@ -718,10 +718,10 @@ function renderEvents(allEvents, cols) {
         div.style.background = '#fcd34d';
         div.style.color      = '#1a1200';
       } else if (isCal1) {
-        div.style.background = '#0d2e1c';
+        div.style.background = '#4ab682';
         div.style.color      = '#ffffff';
       } else if (isCal2) {
-        div.style.background = '#0a2040';
+        div.style.background = '#4fa1ff';
         div.style.color      = '#ffffff';
       } else if (isCal3) {
         div.style.background = '#f0ead6';
@@ -977,7 +977,7 @@ function renderDayWeather(col, dateStr) {
 // ─────────────────────────────────────────────
 //  localStorage cache helpers
 // ─────────────────────────────────────────────
-const CACHE_KEY     = 'family_cal_cache_v2';
+const CACHE_KEY     = 'family_cal_cache_v3';
 const WX_CACHE_KEY  = 'family_wx_cache';
 const CACHE_MAX_AGE = 60 * 60 * 1000;    // 1 hour for calendars
 const WX_MAX_AGE    = 30 * 60 * 1000;    // 30 min for weather
