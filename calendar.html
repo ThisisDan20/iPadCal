@@ -69,8 +69,7 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      justify-content: space-between;
-      gap: 20px;
+      gap: 16px;
       border-bottom: 1px solid var(--border2);
       padding-bottom: 14px;
       border-top: 3px solid var(--top-rule);
@@ -79,12 +78,21 @@
 
     .header-left { display: flex; flex-direction: column; flex-shrink: 0; }
 
+    /* Right block: sun cards + legend side by side */
     .header-right {
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
+      flex-direction: row;
       gap: 8px;
-      min-width: 0;
+      align-items: stretch;
+      margin-left: auto;
+    }
+
+    /* Sun cards side by side */
+    .sun-cards-wrap {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      align-items: stretch;
     }
 
     #clock {
@@ -106,12 +114,9 @@
       font-family: 'Roboto', sans-serif;
     }
 
-    /* Sun/moon bar — two side-by-side info cards */
+    /* Sun/moon — individual cards inside .sun-cards-wrap */
     #sun-bar {
-      display: flex;
-      flex-direction: row;
-      gap: 8px;
-      align-items: stretch;
+      display: contents; /* children flow into .sun-cards-wrap flex */
     }
 
     .sun-card {
@@ -163,27 +168,35 @@
     .moon-marker { position: absolute; top: 50%; transform: translate(-50%,-50%); font-size: 1rem; line-height: 1; }
     .moon-phase-label { font-size: 0.58rem; color: var(--muted); white-space: nowrap; letter-spacing: 0.04em; font-family: 'Roboto', sans-serif; }
 
-    /* Legend */
+    /* Legend — 2×2 grid of coloured cards */
     .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 16px;
-      align-items: center;
-      justify-content: flex-end;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      align-content: start;
+      flex-shrink: 0;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: clamp(0.58rem, 1.4vw, 0.7rem);
-      color: var(--muted);
-      font-weight: 600;
-      letter-spacing: 0.1em;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: clamp(0.6rem, 1.2vw, 0.68rem);
+      font-weight: 700;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
+      white-space: nowrap;
+      color: #fff;
     }
 
-    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    /* Per-person legend card colours */
+    .legend-item[data-cal="1"] { background: var(--cal1); color: #fff; }
+    .legend-item[data-cal="2"] { background: var(--cal2); color: #fff; }
+    .legend-item[data-cal="3"] { background: var(--cal3); color: var(--cal3-text); }
+    .legend-item[data-cal="4"] { background: #1e1e1e; color: #aaa; border: 1px solid #333; }
+
+    .legend-dot { display: none; }
 
 
 
@@ -436,7 +449,8 @@
       <div id="date-label">Loading...</div>
     </div>
     <div class="header-right">
-      <div id="sun-bar">
+      <!-- Sun/moon cards side by side -->
+      <div class="sun-cards-wrap" id="sun-bar">
         <div class="sun-card" id="sun-rise-card">
           <div class="sun-card-row">
             <span class="sun-card-icon">🌅</span>
@@ -468,6 +482,7 @@
           </div>
         </div>
       </div>
+      <!-- Legend 2×2 grid -->
       <div class="legend" id="legend"></div>
     </div>
   </header>
@@ -541,11 +556,8 @@ updateClock();
 // ─────────────────────────────────────────────
 function buildLegend() {
   const el = document.getElementById('legend');
-  el.innerHTML = CALENDARS.map(c =>
-    `<div class="legend-item">
-      <div class="legend-dot" style="background:${c.color}"></div>
-      ${c.name}
-    </div>`
+  el.innerHTML = CALENDARS.map((c, i) =>
+    `<div class="legend-item" data-cal="${i + 1}">${c.name}</div>`
   ).join('');
 }
 
