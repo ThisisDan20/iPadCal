@@ -29,8 +29,8 @@
       --top-rule:  #e8e4dc;
       --cal1:      #4ab682;
       --cal1-bg:   #0d2e1c;
-      --cal2:      #4fa1ff;
-      --cal2-bg:   #0a2040;
+      --cal2:      #f4a0a0;
+      --cal2-bg:   #4a1a1a;
       --cal3:      #f0ead6;
       --cal3-text: #2a2010;
       --cal3-border: #c8a878;
@@ -352,13 +352,38 @@
     /* ── Status bar ── */
     #status {
       position: fixed;
-      bottom: 8px;
-      right: 12px;
-      font-size: 0.65rem;
-      color: var(--border2);
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #0a0a0a;
+      border-top: 1px solid var(--border);
+      padding: 5px 14px;
+      font-size: 0.6rem;
       font-family: 'Roboto', sans-serif;
       font-weight: 300;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      overflow: hidden;
+      z-index: 100;
     }
+    .log-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+    .log-label {
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.55rem;
+    }
+    .log-value { color: var(--border2); }
+    .log-ok    { color: #4ab682; }
+    .log-warn  { color: #fcd34d; }
+    .log-err   { color: #f4a0a0; }
+    .log-sep   { color: var(--border); }
 
     /* ── Responsive ── */
     @media (max-width: 1024px) {
@@ -448,7 +473,7 @@
   </header>
   <div id="days"></div>
 </div>
-<div id="status">Initialising...</div>
+<div id="status"><span class="log-item"><span class="log-label">Status</span><span class="log-value" id="log-status">Initialising…</span></span></div>
 
 <script>
 // ─────────────────────────────────────────────
@@ -712,7 +737,7 @@ function renderEvents(allEvents, cols) {
       const C = ev.color;
       // Match both var(--calN) and any legacy/cached hex values
       const isCal1 = C === 'var(--cal1)' || C === '#4caf7d' || C === '#4ab682';
-      const isCal2 = C === 'var(--cal2)' || C === '#58a6ff' || C === '#4fa1ff';
+      const isCal2 = C === 'var(--cal2)' || C === '#58a6ff' || C === '#4fa1ff' || C === '#f4a0a0';
       const isCal3 = C === 'var(--cal3)' || C === '#f0ead6';
       if (ev.isBin) {
         div.style.background = '#fcd34d';
@@ -721,8 +746,8 @@ function renderEvents(allEvents, cols) {
         div.style.background = '#4ab682';
         div.style.color      = '#ffffff';
       } else if (isCal2) {
-        div.style.background = '#4fa1ff';
-        div.style.color      = '#ffffff';
+        div.style.background = '#f4a0a0';
+        div.style.color      = '#1a0a0a';
       } else if (isCal3) {
         div.style.background = '#f0ead6';
         div.style.color      = '#2a2010';
@@ -975,9 +1000,50 @@ function renderDayWeather(col, dateStr) {
 }
 
 // ─────────────────────────────────────────────
+//  Activity log
+// ─────────────────────────────────────────────
+const logState = {
+  lastCalRefresh: null,
+  lastWxRefresh:  null,
+  nextReload:     null,
+  calErrors:      [],
+  wxError:        null,
+};
+
+function fmt(d) {
+  if (!d) return '—';
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+function renderLog() {
+  const el = document.getElementById('status');
+  if (!el) return;
+
+  const now = new Date();
+  const nextRefreshMs = REFRESH_MINS * 60 * 1000;
+
+  // Calculate next data refresh (approx)
+  const nextData = logState.lastCalRefresh
+    ? new Date(logState.lastCalRefresh.getTime() + nextRefreshMs)
+    : null;
+  const nextReload = logState.nextReload;
+
+  const calOk  = logState.calErrors.length === 0;
+  const wxOk   = !logState.wxError;
+
+  const sep = '<span class="log-sep"> · </span>';
+  el.innerHTML =
+    `<span class="log-item"><span class="log-label">Cal</span><span class="log-${calOk?'ok':'err'}">${calOk ? fmt(logState.lastCalRefresh) : '⚠ ' + logState.calErrors[0]}</span></span>` + sep +
+    `<span class="log-item"><span class="log-label">Weather</span><span class="log-${wxOk?'ok':'err'}">${wxOk ? fmt(logState.lastWxRefresh) : '⚠ error'}</span></span>` + sep +
+    `<span class="log-item"><span class="log-label">Next refresh</span><span class="log-value">${fmt(nextData)}</span></span>` + sep +
+    `<span class="log-item"><span class="log-label">Next reload</span><span class="log-value">${fmt(nextReload)}</span></span>` + sep +
+    `<span class="log-item"><span class="log-label">Events</span><span class="log-value" id="log-event-count">—</span></span>`;
+}
+
+// ─────────────────────────────────────────────
 //  localStorage cache helpers
 // ─────────────────────────────────────────────
-const CACHE_KEY     = 'family_cal_cache_v3';
+const CACHE_KEY     = 'family_cal_cache_v4';
 const WX_CACHE_KEY  = 'family_wx_cache';
 const CACHE_MAX_AGE = 60 * 60 * 1000;    // 1 hour for calendars
 const WX_MAX_AGE    = 30 * 60 * 1000;    // 30 min for weather
@@ -1034,8 +1100,7 @@ function loadWxCache() {
 //  Main load — weather first, then calendars
 // ─────────────────────────────────────────────
 async function load(background = false) {
-  const status = document.getElementById('status');
-  if (!background) status.textContent = 'Loading…';
+  if (!background) renderLog();
 
   // ── Step 1: Render cached data instantly ──────────────────────────
   const cachedWx  = loadWxCache();
@@ -1065,8 +1130,12 @@ async function load(background = false) {
     freshCols = buildDayColumns();
     if (cachedCal) renderEvents([...cachedCal, ...getBinEvents()], freshCols); // keep cached events visible
     freshCols.forEach(({ el, date }) => renderDayWeather(el, localDateStr(date)));
+    logState.lastWxRefresh = new Date();
+    logState.wxError = null;
     saveWxCache();
+    renderLog();
   } catch(e) {
+    logState.wxError = e.message || 'error';
     // Keep showing cached weather if fetch failed
     if (!cachedWx) document.getElementById('sun-bar').textContent = 'Weather unavailable';
   }
@@ -1095,10 +1164,14 @@ async function load(background = false) {
   saveCache(allEvents);
 
   const now = new Date();
-  const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-  status.textContent = errors.length
-    ? '⚠ ' + errors.join(' | ') + ' — ' + timeStr
-    : 'Updated ' + timeStr;
+  logState.lastCalRefresh = now;
+  logState.calErrors = errors;
+
+  // Update event count
+  const countEl = document.getElementById('log-event-count');
+  if (countEl) countEl.textContent = allEvents.length + ' events';
+
+  renderLog();
 }
 
 // ─────────────────────────────────────────────
@@ -1182,7 +1255,9 @@ load(false);
 setInterval(() => load(true), REFRESH_MINS * 60 * 1000);
 
 // Full page reload every 12 hours to clear memory on old iPad
-setInterval(() => location.reload(), 12 * 60 * 60 * 1000);
+const RELOAD_MS = 12 * 60 * 60 * 1000;
+logState.nextReload = new Date(Date.now() + RELOAD_MS);
+setInterval(() => location.reload(), RELOAD_MS);
 </script>
 </body>
 </html>
