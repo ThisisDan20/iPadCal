@@ -666,7 +666,8 @@ function parseICal(text, cal) {
 
   const now   = new Date();
   const start = new Date(now); start.setHours(0, 0, 0, 0);
-  const end   = new Date(start);
+  start.setDate(start.getDate() - 30); // look back 30 days to catch ongoing multi-day events
+  const end   = new Date(now); end.setHours(0, 0, 0, 0);
   end.setDate(end.getDate() + DAYS_TO_SHOW);
 
   const vevents = comp.getAllSubcomponents('vevent');
@@ -722,7 +723,8 @@ function parseICal(text, cal) {
       } else {
         const evStart = event.startDate.toJSDate();
         const evEnd   = event.endDate ? event.endDate.toJSDate() : null;
-        if (evStart >= start && evStart < end) {
+        // Include if event starts within window OR spans into the window
+        if (evStart < end && (evEnd === null || evEnd > start)) {
           events.push(makeEvent(event, evStart, event.startDate.isDate, evEnd, cal));
         }
       }
@@ -735,7 +737,11 @@ function parseICal(text, cal) {
 function makeEvent(event, startDate, allDay, endDate, cal) {
   // Calculate end from duration if endDate is missing or wrong
   let end = endDate;
-  if (!allDay && startDate) {
+  if (allDay && end) {
+    // iCal all-day events use exclusive end dates (DTEND is the day AFTER the last day)
+    // Subtract 1ms so a Mon–Wed event ends 23:59:59 Wed, not 00:00:00 Thu
+    end = new Date(end.getTime() - 1);
+  } else if (!allDay && startDate) {
     try {
       const dur = event.duration;
       if (dur) {
@@ -800,7 +806,13 @@ function renderEvents(allEvents, cols) {
     const dayEnd   = new Date(date); dayEnd.setHours(23,59,59,999);
 
     const dayEvents = allEvents
-      .filter(e => e.start >= dayStart && e.start <= dayEnd)
+      .filter(e => {
+        // Event starts within this day
+        if (e.start >= dayStart && e.start <= dayEnd) return true;
+        // Multi-day event: started before this day but hasn't ended yet
+        if (e.end && e.start < dayStart && e.end > dayStart) return true;
+        return false;
+      })
       .sort((a, b) => {
         if (a.allDay && !b.allDay) return -1;
         if (!a.allDay && b.allDay) return 1;
