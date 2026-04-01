@@ -72,8 +72,7 @@
       gap: 16px;
       border-bottom: 1px solid var(--border2);
       padding-bottom: 14px;
-      border-top: 3px solid var(--top-rule);
-      padding-top: 16px;
+      padding-top: 4px;
     }
 
     .header-left { display: flex; flex-direction: column; flex-shrink: 0; }
@@ -1132,9 +1131,9 @@ function renderLog() {
   el.innerHTML =
     `<span class="log-item"><span class="log-label">Cal</span><span class="log-${calOk?'ok':'err'}">${calOk ? fmt(logState.lastCalRefresh) : '⚠ ' + logState.calErrors[0]}</span></span>` + sep +
     `<span class="log-item"><span class="log-label">Weather</span><span class="log-${wxOk?'ok':'err'}">${wxOk ? fmt(logState.lastWxRefresh) : '⚠ error'}</span></span>` + sep +
-    `<span class="log-item"><span class="log-label">Next refresh</span><span class="log-value">${fmt(nextData)}</span></span>` + sep +
-    `<span class="log-item"><span class="log-label">Next reload</span><span class="log-value">${fmt(nextReload)}</span></span>` + sep +
-    `<span class="log-item"><span class="log-label">Events</span><span class="log-value" id="log-event-count">—</span></span>`;
+    `<span class="log-item"><span class="log-label">Next refresh</span><span class="log-ok">${fmt(nextData)}</span></span>` + sep +
+    `<span class="log-item"><span class="log-label">Next reload</span><span class="log-ok">${fmt(nextReload)}</span></span>` + sep +
+    `<span class="log-item"><span class="log-label">Events</span><span class="log-ok" id="log-event-count">—</span></span>`;
 }
 
 // ─────────────────────────────────────────────
