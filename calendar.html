@@ -886,7 +886,18 @@ function renderEvents(allEvents, cols) {
 
       // Time + duration string
       let timeStr = '';
-      if (!ev.allDay) {
+
+      if (ev.allDay) {
+        // Calculate day X of Y for multi-day events
+        if (ev.end && ev.end - ev.start > 86400000) {
+          const totalDays = Math.round((ev.end - ev.start) / 86400000) + 1;
+          const dayNum    = Math.round((dayStart - ev.start) / 86400000) + 1;
+          const clampedDay = Math.min(Math.max(dayNum, 1), totalDays);
+          timeStr = `<span class="event-time">All day · ${clampedDay}/${totalDays}</span>`;
+        } else {
+          timeStr = `<span class="event-time">All day</span>`;
+        }
+      } else {
         const h = ev.start.getHours();
         const m = ev.start.getMinutes();
         if (h !== 0 || m !== 0) {
@@ -904,7 +915,11 @@ function renderEvents(allEvents, cols) {
                     ? (diffMins/60) + 'h'
                     : Math.floor(diffMins/60) + 'h' + (diffMins%60) + 'm')
                 : diffMins + 'm';
-              t = startStr + ' – ' + endStr + ' (' + durStr + ')';
+              // For timed events spanning multiple days, show day X/Y too
+              const spanDays = Math.floor(diffMins / (60 * 24));
+              const dayOfSpan = Math.round((dayStart - new Date(ev.start).setHours(0,0,0,0)) / 86400000) + 1;
+              const dayTag = spanDays >= 1 ? ` · ${Math.min(dayOfSpan, spanDays+1)}/${spanDays+1}` : '';
+              t = startStr + ' – ' + endStr + ' (' + durStr + ')' + dayTag;
             }
           }
           timeStr = `<span class="event-time">${t}</span>`;
