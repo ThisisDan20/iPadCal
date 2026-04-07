@@ -973,14 +973,32 @@ function renderEvents(allEvents, cols) {
 
       if (isCal4) div.classList.add('ev-nz');
 
-      // Extract suburb/city from full address (last 1-2 comma-separated parts)
+      // Extract suburb from address — strip country, postcodes, "New Zealand"
       let locationStr = '';
       if (ev.location) {
-        const parts = ev.location.split(',').map(s => s.trim()).filter(Boolean);
-        // Use last 2 parts max, skip postcodes (pure numbers/short codes)
-        const useful = parts.filter(p => !/^\d{4,}$/.test(p) && p.length > 2);
-        if (useful.length > 0) {
-          locationStr = `<span class="event-location">${escHtml(useful.slice(-2).join(', '))}</span>`;
+        const raw = ev.location.trim();
+        // Virtual meetings — show as-is (short, no commas)
+        if (raw.toLowerCase().includes('teams') || raw.toLowerCase().includes('zoom') ||
+            raw.toLowerCase().includes('meet.') || raw.toLowerCase().includes('online')) {
+          locationStr = `<span class="event-location">${escHtml(raw.split(';')[0].trim())}</span>`;
+        } else {
+          const parts = raw.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+          const skip = /^(new zealand|nz|australia|australia|united states|usa|uk|united kingdom)$/i;
+          const isPostcode = s => /^\d{3,6}$/.test(s) || /^[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2}$/i.test(s);
+          const isCityWithPostcode = s => /^[A-Za-z\s]+\s+\d{3,6}$/.test(s); // e.g. "Auckland 0612"
+          const clean = parts
+            .filter(p => !skip.test(p) && !isPostcode(p))
+            .map(p => isCityWithPostcode(p) ? p.replace(/\s+\d{3,6}$/, '').trim() : p);
+          // Suppress bare city-only results (no suburb info worth showing)
+          const bareCities = /^(auckland|wellington|christchurch|hamilton|tauranga|dunedin|palmerston north|napier|hastings|nelson|rotorua|new plymouth|whangarei|invercargill|sydney|melbourne|london)$/i;
+          // Take first meaningful part (usually the suburb/venue)
+          if (clean.length > 0) {
+            const first = clean[0];
+            if (!bareCities.test(first.trim())) {
+              const loc = first.length < 6 && clean[1] ? first + ', ' + clean[1] : first;
+              locationStr = `<span class="event-location">${escHtml(loc)}</span>`;
+            }
+          }
         }
       }
 
