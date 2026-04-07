@@ -382,6 +382,15 @@
 
     .event-title { display: block; }
 
+    .event-location {
+      font-family: 'Roboto', sans-serif;
+      font-size: clamp(0.62rem, 1.3vw, 0.75rem);
+      font-weight: 400;
+      display: block;
+      margin-top: 2px;
+      color: inherit;
+    }
+
     .no-events {
       font-size: clamp(0.75rem, 1.6vw, 0.9rem);
       color: var(--border2);
@@ -786,12 +795,13 @@ function makeEvent(event, startDate, allDay, endDate, cal) {
     } catch(e) {}
   }
   return {
-    title:  event.summary,
-    start:  startDate,
-    end:    end,
-    allDay: allDay,
-    color:  cal.color,
-    cal:    cal.name
+    title:    event.summary,
+    start:    startDate,
+    end:      end,
+    allDay:   allDay,
+    color:    cal.color,
+    cal:      cal.name,
+    location: event.location || null
   };
 }
 
@@ -962,7 +972,19 @@ function renderEvents(allEvents, cols) {
       }
 
       if (isCal4) div.classList.add('ev-nz');
-      div.innerHTML = timeStr + `<span class="event-title">${escHtml(ev.title)}</span>`;
+
+      // Extract suburb/city from full address (last 1-2 comma-separated parts)
+      let locationStr = '';
+      if (ev.location) {
+        const parts = ev.location.split(',').map(s => s.trim()).filter(Boolean);
+        // Use last 2 parts max, skip postcodes (pure numbers/short codes)
+        const useful = parts.filter(p => !/^\d{4,}$/.test(p) && p.length > 2);
+        if (useful.length > 0) {
+          locationStr = `<span class="event-location">${escHtml(useful.slice(-2).join(', '))}</span>`;
+        }
+      }
+
+      div.innerHTML = timeStr + `<span class="event-title">${escHtml(ev.title)}</span>` + locationStr;
       eventsEl.appendChild(div);
     });
   });
@@ -1188,7 +1210,7 @@ function renderLog() {
 // ─────────────────────────────────────────────
 //  localStorage cache helpers
 // ─────────────────────────────────────────────
-const CACHE_KEY     = 'family_cal_cache_v4';
+const CACHE_KEY     = 'family_cal_cache_v5';
 const WX_CACHE_KEY  = 'family_wx_cache';
 const CACHE_MAX_AGE = 60 * 60 * 1000;    // 1 hour for calendars
 const WX_MAX_AGE    = 30 * 60 * 1000;    // 30 min for weather
