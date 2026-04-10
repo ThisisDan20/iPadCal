@@ -610,16 +610,16 @@
         <div class="sun-card" id="sun-rise-card">
           <span class="sun-card-label">Sun today</span>
           <div class="sun-arc-wrap">
-            <svg id="sun-arc-svg" viewBox="0 0 140 52" xmlns="http://www.w3.org/2000/svg">
-              <line x1="4" y1="46" x2="136" y2="46" stroke="#252525" stroke-width="1"/>
-              <path d="M 8 46 A 62 62 0 0 1 132 46" fill="none" stroke="#252525" stroke-width="1.5"/>
-              <path id="sun-arc-fill" d="M 8 46 A 62 62 0 0 1 132 46" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="196" stroke-dashoffset="196"/>
-              <circle id="sun-arc-dot" cx="8" cy="46" r="5" fill="#fbbf24" opacity="0"/>
+            <svg id="sun-arc-svg" viewBox="0 0 140 36" xmlns="http://www.w3.org/2000/svg">
+              <line x1="4" y1="32" x2="136" y2="32" stroke="#252525" stroke-width="1"/>
+              <path d="M 8 32 A 62 30 0 0 1 132 32" fill="none" stroke="#252525" stroke-width="1.5"/>
+              <path id="sun-arc-fill" d="M 8 32 A 62 30 0 0 1 132 32" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="157" stroke-dashoffset="157"/>
+              <circle id="sun-arc-dot" cx="8" cy="32" r="5" fill="#fbbf24" opacity="0"/>
               <g id="sun-rays" opacity="0">
-                <line id="sun-r1" x1="8" y1="46" x2="8" y2="41" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
-                <line id="sun-r2" x1="8" y1="46" x2="8" y2="41" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
-                <line id="sun-r3" x1="8" y1="46" x2="8" y2="41" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
-                <line id="sun-r4" x1="8" y1="46" x2="8" y2="41" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
+                <line id="sun-r1" x1="8" y1="32" x2="8" y2="27" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
+                <line id="sun-r2" x1="8" y1="32" x2="8" y2="27" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
+                <line id="sun-r3" x1="8" y1="32" x2="8" y2="27" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
+                <line id="sun-r4" x1="8" y1="32" x2="8" y2="27" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
               </g>
             </svg>
           </div>
@@ -1245,7 +1245,7 @@ function renderSunBar(sunriseISO, sunsetISO) {
   const progress = Math.max(0, Math.min(1, (nowMin - riseMin) / (setMin - riseMin)));
   const aboveHorizon = nowMin >= riseMin && nowMin <= setMin;
 
-  const arcLen = 196;
+  const arcLen = 157;
   const arcFill = document.getElementById('sun-arc-fill');
   if (arcFill) {
     arcFill.style.strokeDashoffset = aboveHorizon ? arcLen * (1 - progress) : arcLen;
@@ -1256,7 +1256,7 @@ function renderSunBar(sunriseISO, sunsetISO) {
   if (dot && aboveHorizon) {
     const angle = Math.PI - progress * Math.PI;
     const cx = 70 + 62 * Math.cos(angle);
-    const cy = 46 - 62 * Math.sin(angle);
+    const cy = 32 - 30 * Math.sin(angle);
     dot.setAttribute('cx', cx.toFixed(1));
     dot.setAttribute('cy', cy.toFixed(1));
     dot.setAttribute('opacity', '1');
