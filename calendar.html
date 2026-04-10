@@ -120,12 +120,11 @@
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 12px 14px;
+      padding: 10px 12px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      min-width: 140px;
-      min-height: 110px;
+      gap: 6px;
+      min-width: 130px;
     }
 
     .sun-card-label {
@@ -152,7 +151,7 @@
     .sun-time-block.right { align-items: flex-end; }
     .sun-time-val {
       font-family: 'Inter', sans-serif;
-      font-size: clamp(0.95rem, 2vw, 1.2rem);
+      font-size: clamp(0.9rem, 1.8vw, 1.1rem);
       font-weight: 900;
       letter-spacing: -1px;
       line-height: 1;
@@ -163,12 +162,12 @@
     .moon-ring-wrap {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
     .moon-ring {
       position: relative;
-      width: 52px;
-      height: 52px;
+      width: 40px;
+      height: 40px;
       flex-shrink: 0;
     }
     .moon-ring svg { width: 100%; height: 100%; }
@@ -178,20 +177,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      font-size: 1.1rem;
       line-height: 1;
     }
-    .moon-ring-info { display: flex; flex-direction: column; gap: 3px; }
+    .moon-ring-info { display: flex; flex-direction: column; gap: 2px; }
     .moon-ring-pct {
       font-family: 'Inter', sans-serif;
-      font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+      font-size: clamp(1rem, 2vw, 1.2rem);
       font-weight: 900;
       letter-spacing: -1px;
       line-height: 1;
       color: var(--text);
     }
     .moon-ring-name {
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       color: var(--muted);
       font-family: 'Roboto', sans-serif;
       line-height: 1.3;
@@ -609,16 +608,16 @@
         <div class="sun-card" id="sun-rise-card">
           <span class="sun-card-label">Sun today</span>
           <div class="sun-arc-wrap">
-            <svg id="sun-arc-svg" viewBox="0 0 140 52" xmlns="http://www.w3.org/2000/svg">
-              <line x1="4" y1="46" x2="136" y2="46" stroke="#252525" stroke-width="1"/>
-              <path d="M 8 46 A 62 62 0 0 1 132 46" fill="none" stroke="#252525" stroke-width="1.5"/>
-              <path id="sun-arc-fill" d="M 8 46 A 62 62 0 0 1 132 46" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="196" stroke-dashoffset="196"/>
-              <circle id="sun-arc-dot" cx="8" cy="46" r="5" fill="#fbbf24" opacity="0"/>
+            <svg id="sun-arc-svg" viewBox="0 0 140 42" xmlns="http://www.w3.org/2000/svg">
+              <line x1="4" y1="38" x2="136" y2="38" stroke="#252525" stroke-width="1"/>
+              <path d="M 8 38 A 62 62 0 0 1 132 38" fill="none" stroke="#252525" stroke-width="1.5"/>
+              <path id="sun-arc-fill" d="M 8 38 A 62 62 0 0 1 132 38" fill="none" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="196" stroke-dashoffset="196"/>
+              <circle id="sun-arc-dot" cx="8" cy="38" r="4.5" fill="#fbbf24" opacity="0"/>
               <g id="sun-rays" opacity="0">
-                <line id="sun-r1" x1="8" y1="46" x2="8" y2="41" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
-                <line id="sun-r2" x1="8" y1="46" x2="8" y2="41" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
-                <line id="sun-r3" x1="8" y1="46" x2="8" y2="41" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
-                <line id="sun-r4" x1="8" y1="46" x2="8" y2="41" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
+                <line id="sun-r1" x1="8" y1="38" x2="8" y2="33" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
+                <line id="sun-r2" x1="8" y1="38" x2="8" y2="33" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
+                <line id="sun-r3" x1="8" y1="38" x2="8" y2="33" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
+                <line id="sun-r4" x1="8" y1="38" x2="8" y2="33" stroke="#fbbf24" stroke-width="1.2" stroke-linecap="round"/>
               </g>
             </svg>
           </div>
@@ -638,12 +637,12 @@
           <span class="sun-card-label">Moon</span>
           <div class="moon-ring-wrap">
             <div class="moon-ring">
-              <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="26" cy="26" r="22" fill="none" stroke="#252525" stroke-width="3"/>
-                <circle id="moon-ring-progress" cx="26" cy="26" r="22" fill="none" stroke="#e8e4dc"
+              <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="20" cy="20" r="16" fill="none" stroke="#252525" stroke-width="3"/>
+                <circle id="moon-ring-progress" cx="20" cy="20" r="16" fill="none" stroke="#e8e4dc"
                   stroke-width="3" stroke-linecap="round"
-                  stroke-dasharray="138" stroke-dashoffset="138"
-                  transform="rotate(-90 26 26)"/>
+                  stroke-dasharray="101" stroke-dashoffset="101"
+                  transform="rotate(-90 20 20)"/>
               </svg>
               <div class="moon-ring-emoji" id="moon-emoji">🌑</div>
             </div>
@@ -1255,7 +1254,7 @@ function renderSunBar(sunriseISO, sunsetISO) {
   if (dot && aboveHorizon) {
     const angle = Math.PI - progress * Math.PI;
     const cx = 70 + 62 * Math.cos(angle);
-    const cy = 46 - 62 * Math.sin(angle);
+    const cy = 38 - 62 * Math.sin(angle);
     dot.setAttribute('cx', cx.toFixed(1));
     dot.setAttribute('cy', cy.toFixed(1));
     dot.setAttribute('opacity', '1');
@@ -1286,7 +1285,7 @@ function renderSunBar(sunriseISO, sunsetISO) {
   if (moonPhase) moonPhase.textContent = moonPct + '%';
   if (moonName)  moonName.textContent  = moon.name;
   if (moonRing) {
-    const circumference = 138;
+    const circumference = 101;
     moonRing.style.strokeDashoffset = circumference - (circumference * moonPct / 100);
   }
 }
