@@ -391,6 +391,27 @@
       color: inherit;
     }
 
+    .fb-badge {
+      position: absolute;
+      bottom: 5px;
+      right: 6px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #1877F2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      font-family: 'Inter', sans-serif;
+      z-index: 4;
+    }
+
+    .event.has-fb { padding-right: 28px; }
+
     .no-events {
       font-size: clamp(0.75rem, 1.6vw, 0.9rem);
       color: var(--border2);
@@ -617,6 +638,12 @@ const CALENDARS = [
     name: "NZ Holidays 🇳🇿",
     url:  "https://calendar.google.com/calendar/ical/en.new_zealand%23holiday%40group.v.calendar.google.com/public/basic.ics",
     color: "var(--cal4)",
+  },
+  {
+    name:  "Dan 🐒 FB",
+    url:   "https://www.facebook.com/events/ical/upcoming/?uid=693840867&key=x48C7PTFg5en8rRt",
+    color: "var(--cal1)",
+    isFB:  true
   }
 ];
 
@@ -630,7 +657,7 @@ function localDateStr(d) {
     + String(d.getDate()).padStart(2, '0');
 }
 // Your Cloudflare Worker proxy URL - see worker.js for setup instructions
-const WORKER_URL = 'https://nameless-tooth-8a13.dgroberts.workers.dev';
+const WORKER_URL = 'https://ipadcal.dgroberts.workers.dev';
 const CORS_PROXIES = [
   url => `${WORKER_URL}/?url=${encodeURIComponent(url)}`,
 ];
@@ -801,7 +828,8 @@ function makeEvent(event, startDate, allDay, endDate, cal) {
     allDay:   allDay,
     color:    cal.color,
     cal:      cal.name,
-    location: event.location || null
+    location: event.location || null,
+    isFB:     cal.isFB || false
   };
 }
 
@@ -1002,7 +1030,9 @@ function renderEvents(allEvents, cols) {
         }
       }
 
-      div.innerHTML = timeStr + `<span class="event-title">${escHtml(ev.title)}</span>` + locationStr;
+      if (ev.isFB) div.classList.add('has-fb');
+      const fbBadge = ev.isFB ? '<div class="fb-badge">f</div>' : '';
+      div.innerHTML = timeStr + `<span class="event-title">${escHtml(ev.title)}</span>` + locationStr + fbBadge;
       eventsEl.appendChild(div);
     });
   });
@@ -1228,7 +1258,7 @@ function renderLog() {
 // ─────────────────────────────────────────────
 //  localStorage cache helpers
 // ─────────────────────────────────────────────
-const CACHE_KEY     = 'family_cal_cache_v5';
+const CACHE_KEY     = 'family_cal_cache_v6';
 const WX_CACHE_KEY  = 'family_wx_cache';
 const CACHE_MAX_AGE = 60 * 60 * 1000;    // 1 hour for calendars
 const WX_MAX_AGE    = 30 * 60 * 1000;    // 30 min for weather
