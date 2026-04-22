@@ -453,6 +453,22 @@
       font-style: italic;
     }
 
+    /* Past events — slim left-border line */
+    .event.ev-past {
+      background: transparent !important;
+      padding: 2px 7px;
+      border-radius: 0;
+      border-left: 2px solid;
+      opacity: 0.35;
+      font-size: clamp(0.6rem, 1.2vw, 0.7rem);
+      font-family: 'Roboto', sans-serif;
+      font-weight: 400;
+      color: var(--text) !important;
+    }
+    .event.ev-past .event-time,
+    .event.ev-past .event-location,
+    .event.ev-past .fb-badge { display: none; }
+
     /* ── NZ Holiday events — laser kiwi ── */
     .event.ev-nz {
       background: #0a0a0a;
@@ -1002,14 +1018,18 @@ function renderEvents(allEvents, cols) {
         });
       }
 
-      // Fade past events
+      // Past events — slim left-border style; in-progress slight fade
       if (!ev.allDay && ev.end) {
         const now = new Date();
         if (ev.end < now) {
-          div.style.opacity = '0.35';
+          div.classList.add('ev-past');
+          div.style.borderLeftColor = ev.isBin ? '#f59e0b'
+            : isCal1 ? '#4ab682'
+            : isCal2 ? '#4fa1ff'
+            : isCal3 ? '#c8a878'
+            : '#555';
         } else if (ev.start < now && ev.end > now) {
-          // In progress — subtle fade
-          div.style.opacity = '0.7';
+          div.style.opacity = '0.75';
         }
       }
 
@@ -1088,7 +1108,14 @@ function renderEvents(allEvents, cols) {
 
       if (ev.isFB) div.classList.add('has-fb');
       const fbBadge = ev.isFB ? '<div class="fb-badge">f</div>' : '';
-      div.innerHTML = timeStr + `<span class="event-title">${escHtml(ev.title)}</span>` + locationStr + fbBadge;
+
+      if (div.classList.contains('ev-past')) {
+        const h = ev.start.getHours(), m = ev.start.getMinutes();
+        const t = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+        div.innerHTML = `${t} · ${escHtml(ev.title)}`;
+      } else {
+        div.innerHTML = timeStr + `<span class="event-title">${escHtml(ev.title)}</span>` + locationStr + fbBadge;
+      }
       eventsEl.appendChild(div);
     });
   });
