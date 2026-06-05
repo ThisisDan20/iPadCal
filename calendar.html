@@ -453,6 +453,15 @@
       font-style: italic;
     }
 
+    /* Sports calendar — diagonal green→purple gradient */
+    .event.ev-sports {
+      background: linear-gradient(135deg, #1a7a42, #7c3aed);
+      color: #fff;
+    }
+    .event.ev-sports .event-time { color: #fff; }
+    .event.ev-sports.ev-past { border-left-color: #7c3aed !important; }
+    .day-col.is-today .event.ev-sports.ev-past { border-color: #7c3aed !important; }
+
     /* Past events — slim left-border line (dark cards) */
     .event.ev-past {
       background: transparent !important;
@@ -725,6 +734,13 @@ const CALENDARS = [
     color: "var(--cal1)",
     isFB:  true,
     hideLegend: true
+  },
+  {
+    name:       "Dan 🐒 Sports",
+    url:        "https://calendar.google.com/calendar/ical/alqidju9pdaaf3rh7mpgino320%40group.calendar.google.com/public/basic.ics",
+    color:      "sports",
+    isSports:   true,
+    hideLegend: true
   }
 ];
 
@@ -911,8 +927,9 @@ function makeEvent(event, startDate, allDay, endDate, cal) {
     allDay:   allDay,
     color:    cal.color,
     cal:      cal.name,
-    location: event.location || null,
-    isFB:     cal.isFB || false
+    location:  event.location || null,
+    isFB:      cal.isFB || false,
+    isSports:  cal.isSports || false
   };
 }
 
@@ -1000,6 +1017,8 @@ function renderEvents(allEvents, cols) {
       } else if (isCal3) {
         div.style.background = '#f0ead6';
         div.style.color      = '#2a2010';
+      } else if (ev.isSports) {
+        div.classList.add('ev-sports');
       } else {
         // cal4 / NZ holidays / fallback — laser kiwi handled via CSS class
         isCal4 = true;
@@ -1035,6 +1054,7 @@ function renderEvents(allEvents, cols) {
         if (ev.end < now) {
           div.classList.add('ev-past');
           const pastBorderCol = ev.isBin ? '#f59e0b'
+            : ev.isSports ? '#7c3aed'
             : isCal1 ? '#1a7a42'
             : isCal2 ? '#f4a0a0'
             : isCal3 ? '#c8a878'
@@ -1402,7 +1422,7 @@ function renderLog() {
 // ─────────────────────────────────────────────
 //  localStorage cache helpers
 // ─────────────────────────────────────────────
-const CACHE_KEY     = 'family_cal_cache_v7';
+const CACHE_KEY     = 'family_cal_cache_v8';
 const WX_CACHE_KEY  = 'family_wx_cache';
 const CACHE_MAX_AGE = 60 * 60 * 1000;    // 1 hour for calendars
 const WX_MAX_AGE    = 30 * 60 * 1000;    // 30 min for weather
