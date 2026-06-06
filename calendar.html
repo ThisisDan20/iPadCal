@@ -417,6 +417,11 @@
 
     .event-title { display: block; }
 
+    /* Zahra — ivory with warm dark border */
+    .event.ev-zahra {
+      border: 1.5px solid #7a6040;
+    }
+
     .event-location {
       font-family: 'Roboto', sans-serif;
       font-size: clamp(0.62rem, 1.3vw, 0.75rem);
@@ -1017,6 +1022,7 @@ function renderEvents(allEvents, cols) {
       } else if (isCal3) {
         div.style.background = '#f0ead6';
         div.style.color      = '#2a2010';
+        div.classList.add('ev-zahra');
       } else if (ev.isSports) {
         div.classList.add('ev-sports');
       } else {
