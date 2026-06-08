@@ -439,6 +439,7 @@
       height: 16px;
       border-radius: 50%;
       background: #1877F2;
+      border: 1.5px solid #fff;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -450,7 +451,11 @@
       z-index: 4;
     }
 
-    .event.has-fb { padding-right: 28px; }
+    .event.has-fb {
+      padding-right: 28px;
+      background: linear-gradient(135deg, #1a7a42 0%, #1a7a42 40%, #1877F2 100%) !important;
+      color: #fff !important;
+    }
 
     .no-events {
       font-size: clamp(0.75rem, 1.6vw, 0.9rem);
