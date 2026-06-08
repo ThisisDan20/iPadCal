@@ -465,8 +465,8 @@
 
     /* Sports calendar — diagonal green→purple gradient */
     .event.ev-sports {
-      background: linear-gradient(135deg, #1a7a42 0%, #1a7a42 40%, #7c3aed 100%);
-      color: #fff;
+      background: linear-gradient(135deg, #1a7a42 0%, #1a7a42 40%, #7c3aed 100%) !important;
+      color: #fff !important;
     }
     .event.ev-sports .event-time { color: #fff; }
     .event.ev-sports.ev-past { border-left-color: #7c3aed !important; }
@@ -1018,6 +1018,8 @@ function renderEvents(allEvents, cols) {
       if (ev.isBin) {
         div.style.background = '#fcd34d';
         div.style.color      = '#1a1200';
+      } else if (ev.isSports) {
+        div.classList.add('ev-sports');
       } else if (isCal1) {
         div.style.background = '#1a7a42';
         div.style.color      = '#ffffff';
@@ -1028,8 +1030,6 @@ function renderEvents(allEvents, cols) {
         div.style.background = '#f0ead6';
         div.style.color      = '#2a2010';
         div.classList.add('ev-zahra');
-      } else if (ev.isSports) {
-        div.classList.add('ev-sports');
       } else {
         // cal4 / NZ holidays / fallback — laser kiwi handled via CSS class
         isCal4 = true;
