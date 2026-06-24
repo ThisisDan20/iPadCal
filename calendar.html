@@ -211,6 +211,16 @@
       flex-shrink: 0;
     }
 
+    /* Portrait: show short names, hide full names */
+    .legend-short { display: none; }
+    .legend-full  { display: inline; }
+
+    @media (orientation: portrait) {
+      .legend-short { display: inline; }
+      .legend-full  { display: none; }
+      .legend-item  { font-size: 0.56rem; padding: 4px 6px; }
+    }
+
     .legend-item {
       display: flex;
       align-items: center;
@@ -793,10 +803,23 @@ updateClock();
 // ─────────────────────────────────────────────
 function buildLegend() {
   const el = document.getElementById('legend');
+  // Short names for portrait mode — emoji + first name only
+  const shortNames = {
+    "Dan 🐒":        "🐒 Dan",
+    "Marcia 👹":     "👹 Mar",
+    "Zahra 🐯":      "🐯 Zah",
+    "NZ Holidays 🇳🇿": "🇳🇿 NZ",
+  };
   el.innerHTML = CALENDARS
     .map((c, i) => ({ c, i }))
     .filter(({ c }) => !c.hideLegend)
-    .map(({ c, i }) => `<div class="legend-item" data-cal="${i + 1}"><span>${c.name}</span></div>`)
+    .map(({ c, i }) => {
+      const short = shortNames[c.name] || c.name;
+      return `<div class="legend-item" data-cal="${i + 1}">` +
+        `<span class="legend-full">${c.name}</span>` +
+        `<span class="legend-short">${short}</span>` +
+        `</div>`;
+    })
     .join('');
 }
 
