@@ -1179,9 +1179,11 @@ function renderEvents(allEvents, cols) {
       const fbBadge = ev.isFB ? '<div class="fb-badge">f</div>' : '';
 
       if (div.classList.contains('ev-past')) {
-        const h = ev.start.getHours(), m = ev.start.getMinutes();
-        const t = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
-        div.innerHTML = `${t} · ${escHtml(ev.title)}`;
+        const pad = n => String(n).padStart(2,'0');
+        const st  = pad(ev.start.getHours()) + ':' + pad(ev.start.getMinutes());
+        const en  = ev.end ? pad(ev.end.getHours()) + ':' + pad(ev.end.getMinutes()) : null;
+        const range = en ? `${st} – ${en}` : st;
+        div.innerHTML = `${range} · ${escHtml(ev.title)}`;
       } else {
         div.innerHTML = timeStr + `<span class="event-title">${escHtml(ev.title)}</span>` + locationStr + fbBadge;
       }
