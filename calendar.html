@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- iPadCal calendar.html — v2.0: feed URLs moved to Worker secrets; access key read from #k= -->
+<!-- iPadCal calendar.html — v2.1: feed URLs moved to Worker secrets; event count fix; access key read from #k= -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1420,7 +1420,7 @@ function renderLog() {
     `<span class="log-item"><span class="log-label">Weather</span><span class="log-${wxOk?'ok':'err'}">${wxOk ? fmt(logState.lastWxRefresh) : '⚠ error'}</span></span>` + sep +
     `<span class="log-item"><span class="log-label">Next refresh</span><span class="log-ok">${fmt(nextData)}</span></span>` + sep +
     `<span class="log-item"><span class="log-label">Next reload</span><span class="log-ok">${fmt(nextReload)}</span></span>` + sep +
-    `<span class="log-item"><span class="log-label">Events</span><span class="log-ok" id="log-event-count">—</span></span>`;
+    `<span class="log-item"><span class="log-label">Events</span><span class="log-ok" id="log-event-count">${logState.eventCount ?? '—'}</span></span>`;
 }
 
 // ─────────────────────────────────────────────
@@ -1549,9 +1549,7 @@ async function load(background = false) {
   logState.calErrors = errors;
 
   // Update event count
-  const countEl = document.getElementById('log-event-count');
-  if (countEl) countEl.textContent = allEvents.length + ' events';
-
+  logState.eventCount = allEvents.length;
   renderLog();
 }
 
