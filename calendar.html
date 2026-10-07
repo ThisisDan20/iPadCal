@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- iPadCal calendar.html — v2.0: feed URLs moved to Worker secrets; access key read from #k= -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -728,40 +729,13 @@
 //  CONFIGURATION — paste your iCal URLs here
 // ─────────────────────────────────────────────
 const CALENDARS = [
-  {
-    name: "Dan 🐒",
-    url:  "https://calendar.google.com/calendar/ical/dgroberts%40gmail.com/private-358ccdd864b4a9371908865fe1211610/basic.ics",
-    color: "var(--cal1)"
-  },
-  {
-    name: "Marcia 👹",
-    url:  "webcal://p185-caldav.icloud.com/published/2/MTE5OTExNDY4NzExOTkxMTfXDGIyUsTZxA8rvg7A83jlwl9UzKbtPpg_MCEX4YO0",
-    color: "var(--cal2)"
-  },
-  {
-    name: "Zahra 🐯",
-    url:  "webcal://p170-caldav.icloud.com/published/2/ODE1MTk1NDY4MDgxNTE5NU1ED8wQHaHNE6asZ-nNS3MAEgiVO1grHc10WzIgTqn5",
-    color: "var(--cal3)"
-  },
-  {
-    name: "NZ Holidays 🇳🇿",
-    url:  "https://calendar.google.com/calendar/ical/en.new_zealand%23holiday%40group.v.calendar.google.com/public/basic.ics",
-    color: "var(--cal4)",
-  },
-  {
-    name:  "Dan 🐒 FB",
-    url:   "https://www.facebook.com/events/ical/upcoming/?uid=693840867&key=x48C7PTFg5en8rRt",
-    color: "var(--cal1)",
-    isFB:  true,
-    hideLegend: true
-  },
-  {
-    name:       "Dan 🐒 Sports",
-    url:        "https://calendar.google.com/calendar/ical/alqidju9pdaaf3rh7mpgino320%40group.calendar.google.com/public/basic.ics",
-    color:      "sports",
-    isSports:   true,
-    hideLegend: true
-  }
+  // Feed URLs live in the Worker's HOUSEHOLDS secret — only short IDs here
+  { name: "Dan 🐒",          feed: "dan",    color: "var(--cal1)" },
+  { name: "Marcia 👹",       feed: "marcia", color: "var(--cal2)" },
+  { name: "Zahra 🐯",        feed: "zahra",  color: "var(--cal3)" },
+  { name: "NZ Holidays 🇳🇿", feed: "nz",     color: "var(--cal4)" },
+  { name: "Dan 🐒 FB",       feed: "fb",     color: "var(--cal1)", isFB: true,     hideLegend: true },
+  { name: "Dan 🐒 Sports",   feed: "sports", color: "sports",      isSports: true, hideLegend: true }
 ];
 
 const DAYS_TO_SHOW  = 28;   // columns shown
@@ -775,9 +749,19 @@ function localDateStr(d) {
 }
 // Your Cloudflare Worker proxy URL - see worker.js for setup instructions
 const WORKER_URL = 'https://ipadcal.dgroberts.workers.dev';
-const CORS_PROXIES = [
-  url => `${WORKER_URL}/?url=${encodeURIComponent(url)}`,
-];
+
+// Access key: open the page once as calendar.html#k=YOUR_KEY.
+// It is saved on the device; the key is never stored in this file.
+function getAccessKey() {
+  const m = location.hash.match(/(?:^#|&)k=([^&]+)/);
+  if (m) {
+    const k = decodeURIComponent(m[1]);
+    try { localStorage.setItem('ipadcal_key', k); } catch(e) {}
+    return k;
+  }
+  try { return localStorage.getItem('ipadcal_key') || ''; } catch(e) { return ''; }
+}
+const ACCESS_KEY = getAccessKey();
 
 // ─────────────────────────────────────────────
 //  Clock
@@ -827,30 +811,14 @@ function buildLegend() {
 //  Fetch + parse one iCal feed
 // ─────────────────────────────────────────────
 async function fetchCalendar(cal) {
-  let url = cal.url.replace(/^webcal:\/\//i, 'https://');
-  let lastErr;
-
-  // Public feeds (e.g. NZ Holidays) can be fetched directly — no proxy needed
-  if (cal.direct) {
-    const resp = await fetch(url, { cache: 'no-store' });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const text = await resp.text();
-    if (!text.includes('BEGIN:VCALENDAR')) throw new Error('Not iCal data');
-    return parseICal(text, cal);
-  }
-
-  for (const proxyFn of CORS_PROXIES) {
-    try {
-      const resp = await fetch(proxyFn(url), { cache: 'no-store' });
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      const text = await resp.text();
-      if (!text.includes('BEGIN:VCALENDAR')) throw new Error('Not iCal data');
-      return parseICal(text, cal);
-    } catch(e) {
-      lastErr = e;
-    }
-  }
-  throw new Error(lastErr ? lastErr.message : 'All proxies failed');
+  if (!ACCESS_KEY) throw new Error('no access key — open with #k=');
+  const url = `${WORKER_URL}/?feed=${encodeURIComponent(cal.feed)}&k=${encodeURIComponent(ACCESS_KEY)}`;
+  const resp = await fetch(url, { cache: 'no-store' });
+  if (resp.status === 401) throw new Error('access key rejected');
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  const text = await resp.text();
+  if (!text.includes('BEGIN:VCALENDAR')) throw new Error('Not iCal data');
+  return parseICal(text, cal);
 }
 
 function parseICal(text, cal) {
@@ -1565,9 +1533,7 @@ async function load(background = false) {
     if (r.status === 'fulfilled') {
       allEvents.push(...r.value);
     } else {
-      if (!CALENDARS[i].url.includes('REPLACE_WITH')) {
-        errors.push(CALENDARS[i].name + ': ' + r.reason.message);
-      }
+      errors.push(CALENDARS[i].name + ': ' + r.reason.message);
     }
   });
 
